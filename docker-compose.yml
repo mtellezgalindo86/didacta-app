@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: didacta-postgres
+    environment:
+      POSTGRES_DB: didacta
+      POSTGRES_USER: didacta
+      POSTGRES_PASSWORD: didacta
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - didacta-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U didacta"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: didacta-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/didacta
+      KC_DB_USERNAME: didacta
+      KC_DB_PASSWORD: didacta
+      KC_DB_SCHEMA: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - ./infra/keycloak/realm:/opt/keycloak/data/import
+      - keycloak_data:/opt/keycloak/data
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - didacta-net
+
+  didacta-api:
+    build:
+      context: ./didacta-api
+      dockerfile: Dockerfile
+    container_name: didacta-api
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/didacta
+      SPRING_DATASOURCE_USERNAME: didacta
+      SPRING_DATASOURCE_PASSWORD: didacta
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/didacta
+    ports:
+      - "8088:8080"
+    depends_on:
+      keycloak:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    networks:
+      - didacta-net
+
+networks:
+  didacta-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  keycloak_data:

@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: didacta-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/didacta
+    username: didacta
+    password: didacta
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/didacta
+          jwk-set-uri: http://localhost:8081/realms/didacta/protocol/openid-connect/certs
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.didacta.api: DEBUG
+    org.springframework.security: DEBUG
