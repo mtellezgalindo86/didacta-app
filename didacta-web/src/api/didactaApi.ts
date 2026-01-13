@@ -25,4 +25,21 @@ api.interceptors.request.use(async (config) => {
     return config;
 });
 
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && [401, 403].includes(error.response.status)) {
+            // If we get an auth error and have a stored institution ID, it might be stale.
+            // Clear it so the user can eventually be redirected or retried correctly.
+            const storedId = localStorage.getItem('didacta_institution_id');
+            if (storedId) {
+                console.warn("Auth error with stored Institution ID. Clearing stale ID.");
+                localStorage.removeItem('didacta_institution_id');
+                // Optional: retry request? For now, we rely on the UI 'Retry' or reload.
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;

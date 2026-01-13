@@ -39,7 +39,15 @@ export default function Step1Institution() {
             title="Configura tu institución"
             subtitle="Ingresa los datos principales de tu centro educativo. Podrás gestionar sedes y permisos más adelante."
         >
-            <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+            {loading && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <span className="text-sm font-medium text-blue-600">Guardando...</span>
+                    </div>
+                </div>
+            )}
+            <form onSubmit={handleSubmit} className={`space-y-6 ${loading ? 'opacity-20 pointer-events-none' : ''}`}>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la institución *</label>
                     <input
@@ -109,9 +117,9 @@ export default function Step1Institution() {
                     <button
                         type="submit"
                         disabled={loading || !formData.role}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+                        className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-95"
                     >
-                        {loading ? 'Guardando...' : 'Continuar →'}
+                        Continuar →
                     </button>
                 </div>
             </form>

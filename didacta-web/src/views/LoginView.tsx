@@ -5,8 +5,9 @@ export default function LoginView() {
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
                 <div className="flex justify-center mb-6">
-                    {/* Placeholder Logo */}
-                    <div className="h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">D</div>
+                    <div className="flex justify-center mb-6">
+                        <img src="/logo.png" alt="Didacta Logo" className="h-16" />
+                    </div>
                 </div>
                 <h1 className="text-2xl font-bold mb-2 text-gray-900">Bienvenido a Didacta</h1>
                 <p className="text-gray-500 mb-8">Gestión escolar simplificada.</p>

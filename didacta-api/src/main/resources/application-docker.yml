@@ -14,7 +14,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8080/realms/didacta
+
           jwk-set-uri: http://keycloak:8080/realms/didacta/protocol/openid-connect/certs
 
 logging:

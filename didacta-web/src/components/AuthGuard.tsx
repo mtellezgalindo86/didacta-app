@@ -12,6 +12,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<any>(null);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -48,7 +49,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                 }
             } catch (error) {
                 console.error("Failed to check user status", error);
-                // Fallback or error page
+                setError(error);
             } finally {
                 setLoading(false);
             }
@@ -68,6 +69,26 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
     if (loading) {
         return <LoadingView />;
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <div className="text-center">
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Error de conexión</h2>
+                    <p className="text-gray-600 mb-4">No pudimos verificar tu estado. Intenta recargar.</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                        Reintentar
+                    </button>
+                    <pre className="mt-4 text-xs text-left bg-gray-100 p-2 rounded text-red-500 overflow-auto max-w-lg">
+                        {JSON.stringify(error, null, 2)}
+                    </pre>
+                </div>
+            </div>
+        );
     }
 
     return <>{children}</>;

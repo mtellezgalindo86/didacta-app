@@ -54,7 +54,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/didacta
       SPRING_DATASOURCE_USERNAME: didacta
       SPRING_DATASOURCE_PASSWORD: didacta
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/didacta
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/didacta/protocol/openid-connect/certs
     ports:
       - "8088:8080"
     depends_on:
@@ -78,6 +78,9 @@ services:
     depends_on:
       - didacta-api
       - keycloak
+    volumes:
+      - ./didacta-web:/app
+      - /app/node_modules
     networks:
       - didacta-net
 

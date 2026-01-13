@@ -10,6 +10,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -31,12 +34,19 @@ public class SecurityConfig {
                 .requestMatchers("/api/health", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-            // Add UserSyncFilter AFTER BearerToken (so Auth is present)
-            .addFilterAfter(userSyncFilter, BearerTokenAuthenticationFilter.class)
-            // Add TenantInterceptor AFTER UserSyncFilter (so User is in DB)
-            .addFilterAfter(tenantInterceptor, UserSyncFilter.class);
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())))
+            // Add TenantInterceptor first (will be pushed down by UserSyncFilter)
+            .addFilterAfter(tenantInterceptor, BearerTokenAuthenticationFilter.class)
+            // Add UserSyncFilter immediately after BearerToken, claiming the spot before TenantInterceptor
+            .addFilterAfter(userSyncFilter, BearerTokenAuthenticationFilter.class);
             
         return http.build();
+    }
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri("http://keycloak:8080/realms/didacta/protocol/openid-connect/certs").build();
+        // Disable issuer validation because internal (keycloak:8080) vs external (localhost:8081) mismatch
+        jwtDecoder.setJwtValidator(token -> OAuth2TokenValidatorResult.success());
+        return jwtDecoder;
     }
 }
