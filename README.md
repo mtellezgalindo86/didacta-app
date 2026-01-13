@@ -1,65 +1,56 @@
-# Didacta API
+# Didacta App (MVP)
 
-Backend API for the Didacta platform, built with Spring Boot 3, Keycloak, and PostgreSQL.
+Sistema de gestión escolar con arquitectura moderna basada en Spring Boot, React y Keycloak.
 
-## Prerequisites
+## Arquitectura
 
-- Java 21+
+- **Frontend**: React + Vite + TypeScript + TailwindCSS (`didacta-web`)
+- **Backend API**: Spring Boot 3 + Java 21 (`didacta-api`)
+- **Identidad**: Keycloak 24 (OIDC/OAuth2)
+- **Base de Datos**: PostgreSQL 16
+- **Infraestructura**: Docker Compose
+
+## Requisitos Previos
+
 - Docker & Docker Compose
+- Node.js 18+ (Opcional, para desarrollo local)
+- Java 17 (Opcional, para desarrollo local)
 
-## Quick Start (Docker)
+## Instrucciones de Inicio
 
-The fastest way to run the full stack (Database, Auth, API):
-
-```bash
-docker compose up -d
-```
-
-Services will be available at:
-- **API**: http://localhost:8088
-- **Keycloak**: http://localhost:8081 (admin/admin)
-- **PostgreSQL**: localhost:5432
-
-### Verify Installation
-1. Check health:
+1. **Levantar la infraestructura completa:**
    ```bash
-   curl http://localhost:8088/api/health
+   docker compose up --build
    ```
-2. Get a Token (Director):
-   ```bash
-   export TOKEN=$(curl -s -d "client_id=didacta-api" -d "username=director@didacta.local" -d "password=Didacta123!" -d "grant_type=password" http://localhost:8081/realms/didacta/protocol/openid-connect/token | jq -r .access_token)
-   ```
-3. Call Protected Endpoint:
-   ```bash
-   curl -H "Authorization: Bearer $TOKEN" http://localhost:8088/api/me
-   ```
+   *Nota: La primera vez tomará unos minutos mientras se descargan imágenes y se compilan los servicios.*
 
-## Development
+2. **Acceder a los servicios:**
+   - **Frontend (Web)**: [http://localhost:5173](http://localhost:5173)
+   - **Keycloak (Auth)**: [http://localhost:8081](http://localhost:8081)
+     - Usuario admin: `admin` / `admin`
+     - Realm configurado: `didacta`
+   - **API (Backend)**: [http://localhost:8088](http://localhost:8088)
+     - Swagger UI (si habilitado): [http://localhost:8088/swagger-ui.html](http://localhost:8088/swagger-ui.html)
 
-### Build
-```bash
-cd didacta-api
-./gradlew clean build
-```
+## Flujo de Prueba (Onboarding)
 
-### Run Locally (with Docker dependencies)
-1. Start Infra only:
-   ```bash
-   docker compose up -d postgres keycloak
-   ```
-2. Run App:
-   ```bash
-   cd didacta-api
-   ./gradlew bootRun
-   ```
+1. Abrir `http://localhost:5173`
+2. Clic en **"Crear cuenta con Didacta"**.
+3. Completar registro en Keycloak (Nombre, Email, Password, seleccionar Rol).
+   - *Nota: Asegúrese de usar un email válido formato, aunque no se envíe correo real.*
+4. Tras registro, será redirigido al **Onboarding**.
+5. **Paso 1: Institución** - Crear su institución.
+6. **Paso 2: Grupo** - Crear su primer grupo.
+7. **Paso 3: Colaboradores** - Agregar profesores (simulado).
+8. **Dashboard** - Ver pantalla principal.
 
-## Project Structure
-- `didacta-api`: Spring Boot Application (Gradle)
-- `infra`: Infrastructure config (Keycloak realms)
-- `docker-compose.yml`: Local orchestrator
+## Desarrollo
 
-## API Endpoints
-- `GET /api/health` - Public health check
-- `GET /api/me` - Current user info (Auth required)
-- `POST /api/sessions` - Create session
-- `GET /api/sessions` - List sessions (Tenant filtered)
+### Estructura de Proyecto
+- `/didacta-api`: Código fuente Backend.
+- `/didacta-web`: Código fuente Frontend.
+- `/infra`: Configuraciones de infraestructura (Keycloak themes, Postgres schemas).
+
+### Comandos Útiles
+- Reiniciar solo backend: `docker compose restart didacta-api`
+- Ver logs: `docker compose logs -f`

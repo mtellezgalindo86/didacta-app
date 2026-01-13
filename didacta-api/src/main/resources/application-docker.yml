@@ -1,14 +1,23 @@
 spring:
-  config:
-    activate:
-      on-profile: docker
   datasource:
     url: jdbc:postgresql://postgres:5432/didacta
     username: didacta
     password: didacta
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://keycloak:8080/realms/didacta
           jwk-set-uri: http://keycloak:8080/realms/didacta/protocol/openid-connect/certs
+
+logging:
+  level:
+    com.didacta.api: DEBUG
+    org.springframework.security: DEBUG

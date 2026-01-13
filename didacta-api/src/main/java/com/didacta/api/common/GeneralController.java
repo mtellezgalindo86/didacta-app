@@ -18,12 +18,5 @@ public class GeneralController {
         return Map.of("status", "UP");
     }
 
-    @GetMapping("/me")
-    public Map<String, Object> me(@AuthenticationPrincipal Jwt jwt) {
-        return Map.of(
-            "subject", jwt.getSubject(),
-            "roles", jwt.getClaimAsMap("realm_access"), // Simplified
-            "tenant_id", TenantContext.getTenantId()
-        );
-    }
+
 }

@@ -1,5 +1,4 @@
--- Create DBs
-CREATE DATABASE didacta;
+-- Create Keycloak database (Didacta DB is created by POSTGRES_DB env var)
 CREATE DATABASE keycloak;
 
 -- Permissions

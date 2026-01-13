@@ -1,5 +1,6 @@
 {
   "realm": "didacta",
+  "loginTheme": "didacta",
   "enabled": true,
   "users": [
     {
@@ -15,9 +16,14 @@
           "temporary": false
         }
       ],
-      "realmRoles": [ "DIRECTOR", "OWNER" ],
+      "realmRoles": [
+        "DIRECTOR",
+        "OWNER"
+      ],
       "attributes": {
-        "tenant_id": ["tenant-demo"]
+        "tenant_id": [
+          "tenant-demo"
+        ]
       }
     },
     {
@@ -33,19 +39,38 @@
           "temporary": false
         }
       ],
-      "realmRoles": [ "TEACHER" ],
+      "realmRoles": [
+        "TEACHER"
+      ],
       "attributes": {
-        "tenant_id": ["tenant-demo"]
+        "tenant_id": [
+          "tenant-demo"
+        ]
       }
     }
   ],
   "roles": {
     "realm": [
-      { "name": "OWNER", "description": "Owner role" },
-      { "name": "DIRECTOR", "description": "Director role" },
-      { "name": "TEACHER", "description": "Teacher role" },
-      { "name": "STAFF", "description": "Staff role" },
-      { "name": "BACKOFFICE", "description": "Backoffice role" }
+      {
+        "name": "OWNER",
+        "description": "Owner role"
+      },
+      {
+        "name": "DIRECTOR",
+        "description": "Director role"
+      },
+      {
+        "name": "TEACHER",
+        "description": "Teacher role"
+      },
+      {
+        "name": "STAFF",
+        "description": "Staff role"
+      },
+      {
+        "name": "BACKOFFICE",
+        "description": "Backoffice role"
+      }
     ]
   },
   "clients": [
@@ -75,6 +100,25 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "didacta-web",
+      "enabled": true,
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "rootUrl": "http://localhost:5173",
+      "baseUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "+"
+      ],
+      "protocol": "openid-connect"
     }
   ]
 }
