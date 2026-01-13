@@ -1,3 +1,7 @@
--- Create Keycloak database so we don't mix tables with Didacta API configuration
+-- Create DBs
+CREATE DATABASE didacta;
 CREATE DATABASE keycloak;
+
+-- Permissions
+GRANT ALL PRIVILEGES ON DATABASE didacta TO didacta;
 GRANT ALL PRIVILEGES ON DATABASE keycloak TO didacta;
