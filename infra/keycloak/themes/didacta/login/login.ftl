@@ -30,6 +30,25 @@
                         <input tabindex="2" id="password" class="pf-c-form-control" name="password" type="password" autocomplete="off" placeholder="${msg("password")}" />
                     </div>
 
+                    <div class="form-group login-options">
+                        <#if realm.rememberMe && !login.rememberMeDisabled??>
+                            <div class="checkbox">
+                                <label>
+                                    <#if login.rememberMe??>
+                                        <input tabindex="3" id="rememberMe" name="rememberMe" type="checkbox" checked> Recuérdame
+                                    <#else>
+                                        <input tabindex="3" id="rememberMe" name="rememberMe" type="checkbox"> Recuérdame
+                                    </#if>
+                                </label>
+                            </div>
+                        </#if>
+                        <#if realm.resetPasswordAllowed>
+                            <div class="forgot-password">
+                                <a tabindex="5" href="${url.loginResetCredentialsUrl}">¿Olvidaste tu contraseña?</a>
+                            </div>
+                        </#if>
+                    </div>
+
                     <div id="kc-form-buttons" style="margin-top: 24px;">
                         <input type="hidden" id="id-hidden-input" name="credentialId" <#if auth.selectedCredential?has_content>value="${auth.selectedCredential}"</#if>/>
                         <button tabindex="4" class="pf-c-button pf-m-primary" name="login" id="kc-login" type="submit">
@@ -47,13 +66,8 @@
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
             Crear cuenta con Didacta
         </a>
-
-        <div class="security-note">
-            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C9.243 2 7 4.243 7 7v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7c0-2.757-2.243-5-5-5zM9 7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9V7zm4 10.723V20h-2v-2.277a1.993 1.993 0 01.554-3.95A1.993 1.993 0 0113 17.723z"/></svg>
-            <span>Conexión segura vía SSO Keycloak</span>
-        </div>
         
-        <div class="footer-links">
+        <div class="login-footer">
             <a href="#">Ayuda</a>
             <a href="#">Privacidad</a>
             <a href="#">Términos</a>

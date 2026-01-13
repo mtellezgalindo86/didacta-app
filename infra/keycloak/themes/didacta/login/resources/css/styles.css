@@ -28,8 +28,7 @@ body {
     /* Force white over everything */
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
-    min-height: 100vh;
-    /* Reiterate full height */
+    min-height: auto !important;
 }
 
 /* Specific fix for potential bottom border on some Keycloak versions */
@@ -43,7 +42,6 @@ body {
     width: 100%;
     max-width: 100%;
     background-image: none !important;
-    /* Ensure no background on container wrapper */
 }
 
 #kc-header {
@@ -56,7 +54,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Center vertically/horizontally and prevent stretching */
     flex-direction: column;
 }
 
@@ -64,17 +61,15 @@ body {
     background: white;
     width: 100%;
     max-width: 480px;
-    /* Card Width */
     padding: 48px;
     border-radius: 12px;
-    border: 1px solid #E5E7EB;
-    /* Subtle border to define edges on white bg */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-    /* Softer shadow */
+    /* border: 1px solid #E5E7EB; removed for cleaner look if requested, or kept subtle */
+    border: 1px solid #F3F4F6;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    /* Very subtle shadow */
     text-align: center;
     position: relative;
     box-sizing: border-box;
-    /* Ensure padding doesn't affect width calculation if relevant */
 }
 
 /* Header Section */
@@ -85,8 +80,7 @@ body {
 }
 
 .didacta-logo-img {
-    height: 48px;
-    /* Adjustable based on logo aspect ratio */
+    height: 40px;
     width: auto;
     object-fit: contain;
 }
@@ -103,7 +97,7 @@ body {
     color: #6B7280;
     margin-bottom: 32px;
     line-height: 1.5;
-    max-width: 320px;
+    max-width: 380px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -112,25 +106,58 @@ body {
 #kc-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
+}
+
+.form-group {
+    text-align: left;
 }
 
 .pf-c-form-control {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #D1D5DB;
-    border-radius: 6px;
+    padding: 12px 16px;
+    background-color: #F9FAFB;
+    /* Light gray background */
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    /* Softer corners */
     font-size: 14px;
+    color: #111827;
     box-sizing: border-box;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.pf-c-form-control:focus {
+    background-color: #FFFFFF;
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.pf-c-form-control::placeholder {
+    color: #9CA3AF;
+}
+
+/* Input Icons */
+.input-icon-wrapper {
+    position: relative;
+}
+
+/* Email Icon */
+.input-icon-wrapper input#email {
+    /* Force more space for icon */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'%3F%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 16px center;
+    background-size: 20px;
 }
 
 /* Buttons */
 .pf-c-button.pf-m-primary {
     background-color: #3B82F6;
-    /* Blue form image */
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 12px 24px;
     font-size: 14px;
     font-weight: 500;
@@ -148,63 +175,210 @@ body {
 }
 
 .secondary-button {
-    background-color: white;
-    color: #1F2937;
-    border: 1px solid #E5E7EB;
-    border-radius: 6px;
-    padding: 12px 24px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    width: 100%;
+    padding: 12px 24px;
+    margin-top: 12px;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    color: #374151;
+    /* Gray text for secondary */
+    font-size: 14px;
+    font-weight: 500;
     text-decoration: none;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    box-sizing: border-box;
+    gap: 8px;
 }
 
 .secondary-button:hover {
     background-color: #F9FAFB;
+    border-color: #D1D5DB;
+    text-decoration: none;
+    color: #111827;
 }
 
 /* Footer & Extras */
-.security-note {
+.login-footer {
     margin-top: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #6B7280;
-}
-
-.footer-links {
-    margin-top: 48px;
     display: flex;
     justify-content: center;
     gap: 24px;
-    font-size: 12px;
-    color: #9CA3AF;
+    font-size: 13px;
 }
 
-.footer-links a {
-    color: #9CA3AF;
+.login-footer a {
+    color: #9CA3AF !important;
+    /* Forced gray */
     text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.login-footer a:hover {
+    color: #3B82F6 !important;
+    /* Forced blue on hover */
+}
+
+/* Login Options Row (Remember Me & Forgot Password) */
+.login-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #4B5563;
+    padding: 4px 0;
+}
+
+.login-options a {
+    color: #3B82F6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-options .checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
 }
 
 /* Alert/Errors */
 .pf-c-alert {
     padding: 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     margin-bottom: 20px;
     font-size: 13px;
     text-align: left;
-}
-
-.pf-m-danger {
     background-color: #FEE2E2;
     color: #991B1B;
     border: 1px solid #FECACA;
+}
+
+/* Registration Layout */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    width: 100%;
+}
+
+/* .half-width handled by grid 1fr */
+.half-width {
+    width: auto;
+}
+
+.form-label {
+    display: block;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    /* Darker text for labels */
+    margin-bottom: 6px;
+}
+
+.role-selection-section {
+    margin-top: 8px;
+    text-align: left;
+}
+
+.role-grid {
+    display: flex;
+    gap: 24px !important;
+    /* Force gap */
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
+.role-card {
+    flex: 1;
+    cursor: pointer;
+    position: relative;
+}
+
+.role-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.role-card-content {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    height: 100%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.role-card:hover .role-card-content {
+    border-color: #D1D5DB;
+    background-color: #F9FAFB;
+}
+
+.role-card input[type="radio"]:checked+.role-card-content {
+    border-color: #3B82F6;
+    background-color: #EFF6FF;
+    color: #1D4ED8;
+    box-shadow: 0 0 0 1px #3B82F6;
+    /* Active border glow */
+}
+
+.role-icon {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 12px;
+    color: #4B5563;
+    /* Darker gray for inactive */
+    transition: color 0.2s;
+}
+
+.role-card input[type="radio"]:checked+.role-card-content .role-icon {
+    color: #3B82F6;
+}
+
+.role-name {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Terms Checkbox */
+.terms-checkbox {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    color: #4B5563;
+}
+
+.terms-checkbox label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.terms-checkbox input {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.terms-text a {
+    color: #3B82F6;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
