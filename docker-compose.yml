@@ -34,6 +34,7 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
     volumes:
       - ./infra/keycloak/realm:/opt/keycloak/data/import
+      - ./infra/keycloak/themes:/opt/keycloak/themes
       - keycloak_data:/opt/keycloak/data
     ports:
       - "8081:8080"

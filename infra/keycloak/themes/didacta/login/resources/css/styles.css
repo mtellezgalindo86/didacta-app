@@ -1,0 +1,210 @@
+/* Base Reset & Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html,
+body {
+    height: 100%;
+    background-color: #FFFFFF !important;
+    background-image: none !important;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #111827;
+}
+
+/* Ensure topmost container has no border/bg and covers artifacts */
+#kc-content,
+.login-pf-page,
+.login-pf {
+    border: none !important;
+    background: #FFFFFF !important;
+    /* Force white over everything */
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+    min-height: 100vh;
+    /* Reiterate full height */
+}
+
+/* Specific fix for potential bottom border on some Keycloak versions */
+.login-pf-page .card-pf {
+    margin-bottom: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Login Card Container */
+.login-pf-page {
+    width: 100%;
+    max-width: 100%;
+    background-image: none !important;
+    /* Ensure no background on container wrapper */
+}
+
+#kc-header {
+    display: none;
+    /* Hide default header */
+}
+
+#kc-content {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Center vertically/horizontally and prevent stretching */
+    flex-direction: column;
+}
+
+#kc-content-wrapper {
+    background: white;
+    width: 100%;
+    max-width: 480px;
+    /* Card Width */
+    padding: 48px;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    /* Subtle border to define edges on white bg */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    /* Softer shadow */
+    text-align: center;
+    position: relative;
+    box-sizing: border-box;
+    /* Ensure padding doesn't affect width calculation if relevant */
+}
+
+/* Header Section */
+.didacta-logo-container {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.didacta-logo-img {
+    height: 48px;
+    /* Adjustable based on logo aspect ratio */
+    width: auto;
+    object-fit: contain;
+}
+
+#kc-page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: #111827;
+}
+
+.didacta-subtitle {
+    font-size: 14px;
+    color: #6B7280;
+    margin-bottom: 32px;
+    line-height: 1.5;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Form Styles */
+#kc-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pf-c-form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* Buttons */
+.pf-c-button.pf-m-primary {
+    background-color: #3B82F6;
+    /* Blue form image */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.pf-c-button.pf-m-primary:hover {
+    background-color: #2563EB;
+}
+
+.secondary-button {
+    background-color: white;
+    color: #1F2937;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.secondary-button:hover {
+    background-color: #F9FAFB;
+}
+
+/* Footer & Extras */
+.security-note {
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #6B7280;
+}
+
+.footer-links {
+    margin-top: 48px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    font-size: 12px;
+    color: #9CA3AF;
+}
+
+.footer-links a {
+    color: #9CA3AF;
+    text-decoration: none;
+}
+
+/* Alert/Errors */
+.pf-c-alert {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    text-align: left;
+}
+
+.pf-m-danger {
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+}
