@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/didactaApi';
 import OnboardingLayout from './OnboardingLayout';
@@ -10,21 +10,44 @@ export default function Step1Institution() {
         mainLevel: '',
         country: 'MX',
         timezone: 'America/Mexico_City',
-        role: ''
+        role: '',
+        hasMultipleCampuses: false,
+        campusName: ''
     });
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        // Try to fetch existing details (in case of Back navigation)
+        api.get('/api/onboarding/institution-details')
+            .then(res => {
+                if (res.data) {
+                    setFormData(prev => ({
+                        ...prev,
+                        name: res.data.name || '',
+                        mainLevel: res.data.mainLevel || '',
+                        country: res.data.country || 'MX',
+                        timezone: res.data.timezone || 'America/Mexico_City',
+                        role: res.data.role || '',
+                        hasMultipleCampuses: res.data.hasMultipleCampuses || false,
+                        campusName: res.data.campusName || ''
+                    }));
+                }
+            })
+            .catch(() => {
+                // Ignore error (404/403) if not created yet
+            });
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
-            await api.post('/api/onboarding/institution', formData);
-            // Refresh page to trigger AuthGuard re-check or manually navigate
-            // AuthGuard logic re-checks /api/me if we navigate? No, it checks on mount/update.
-            // Better to force reload or navigate to next route if we know it.
-            // Assuming success means we rely on AuthGuard or just go to step 2.
+            const response = await api.post('/api/onboarding/institution', formData);
+            if (response.data && response.data.institutionId) {
+                localStorage.setItem('didacta_institution_id', response.data.institutionId);
+            }
             navigate('/onboarding/step-2');
-            window.location.reload(); // Force re-eval of me state
+
         } catch (error) {
             console.error(error);
             alert('Error al crear institución');
@@ -113,13 +136,44 @@ export default function Step1Institution() {
                     </div>
                 </div>
 
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-900">¿Cuentas con múltiples planteles?</h4>
+                            <p className="text-xs text-gray-500">Si activas esto, podrás registrar tu sede principal ahora.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={formData.hasMultipleCampuses}
+                                onChange={(e) => setFormData({ ...formData, hasMultipleCampuses: e.target.checked })}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    {formData.hasMultipleCampuses && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Plantel Principal *</label>
+                            <input
+                                type="text"
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                placeholder="Ej. Sede Norte"
+                                value={formData.campusName}
+                                onChange={(e) => setFormData({ ...formData, campusName: e.target.value })}
+                            />
+                        </div>
+                    )}
+                </div>
+
                 <div className="flex justify-end pt-4">
                     <button
                         type="submit"
-                        disabled={loading || !formData.role}
+                        disabled={loading || !formData.role || (formData.hasMultipleCampuses && !formData.campusName)}
                         className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-95"
                     >
-                        Continuar →
+                        {loading ? 'Guardando...' : 'Continuar →'}
                     </button>
                 </div>
             </form>

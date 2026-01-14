@@ -48,6 +48,8 @@ public class OnboardingDto {
         private String country;
         private String timezone;
         private String role; // Role of the creator
+        private boolean hasMultipleCampuses;
+        private String campusName; // Optional, if hasMultipleCampuses
     }
 
     @Data
@@ -62,6 +64,7 @@ public class OnboardingDto {
         private String name;
         private String gradeLevel;
         private String shift;
+        private UUID campusId; // Optional, defaults to primary campus
     }
 
     @Data

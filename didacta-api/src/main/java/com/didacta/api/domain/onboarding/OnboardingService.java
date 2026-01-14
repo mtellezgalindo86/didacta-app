@@ -29,6 +29,7 @@ public class OnboardingService {
     private final InstitutionRepository institutionRepository;
     private final InstitutionUserRepository institutionUserRepository;
     private final GroupRepository groupRepository;
+    private final com.didacta.api.domain.campus.CampusRepository campusRepository;
     private final CollaboratorPreUserRepository collaboratorPreUserRepository;
 
     @Transactional(readOnly = true)
@@ -102,26 +103,72 @@ public class OnboardingService {
         AppUser user = appUserRepository.findByKeycloakUserId(keycloakUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Check if user already has an institution (MVP restriction)
+        // Check if user already has an institution
         List<InstitutionUser> memberships = institutionUserRepository.findByUser(user);
+        
+        Institution institution;
         if (!memberships.isEmpty()) {
-            throw new RuntimeException("User already belongs to an institution");
+            // Upsert Mode: User wants to correct Step 1
+            InstitutionUser membership = memberships.get(0); // Take first one
+            institution = membership.getInstitution();
+            
+            // Update fields
+            institution.setName(request.getName());
+            institution.setMainLevel(request.getMainLevel());
+            institution.setCountry(request.getCountry());
+            institution.setTimezone(request.getTimezone());
+            
+            // Update role
+            membership.setRole(request.getRole());
+            
+            // Update Campus Logic
+            // If exists, update its name. If switching logic, might be complex, 
+            // but for MVP reset/update default campus.
+            if (request.isHasMultipleCampuses() && request.getCampusName() != null && !request.getCampusName().isBlank()) {
+                // Find existing campus (likely "Sede Principal" or previously named)
+                Optional<com.didacta.api.domain.campus.Campus> existing = campusRepository.findFirstByInstitutionId(institution.getId());
+                if (existing.isPresent()) {
+                    existing.get().setName(request.getCampusName());
+                } else {
+                    com.didacta.api.domain.campus.Campus newCampus = new com.didacta.api.domain.campus.Campus();
+                    newCampus.setInstitution(institution);
+                    newCampus.setName(request.getCampusName());
+                    campusRepository.save(newCampus);
+                }
+            } else {
+                 // Revert to "Sede Principal" if they unchecked multiple campuses? 
+                 // Maybe keep as is to avoid data loss.
+            }
+            
+            institutionRepository.save(institution);
+            institutionUserRepository.save(membership);
+        } else {
+            // Create Mode
+            institution = new Institution();
+            institution.setName(request.getName());
+            institution.setMainLevel(request.getMainLevel());
+            institution.setCountry(request.getCountry());
+            institution.setTimezone(request.getTimezone());
+            institution.setCreatedByUser(user);
+            institutionRepository.save(institution);
+
+            // Create initial Campus
+            com.didacta.api.domain.campus.Campus campus = new com.didacta.api.domain.campus.Campus();
+            campus.setInstitution(institution);
+            if (request.isHasMultipleCampuses() && request.getCampusName() != null && !request.getCampusName().isBlank()) {
+                campus.setName(request.getCampusName());
+            } else {
+                campus.setName("Sede Principal"); // Default hidden name
+            }
+            campusRepository.save(campus);
+
+            InstitutionUser membership = new InstitutionUser();
+            membership.setInstitution(institution);
+            membership.setUser(user);
+            membership.setRole(request.getRole()); // DIRECTOR, OWNER, etc
+            membership.setStatus("ACTIVE");
+            institutionUserRepository.save(membership);
         }
-
-        Institution institution = new Institution();
-        institution.setName(request.getName());
-        institution.setMainLevel(request.getMainLevel());
-        institution.setCountry(request.getCountry());
-        institution.setTimezone(request.getTimezone());
-        institution.setCreatedByUser(user);
-        institutionRepository.save(institution);
-
-        InstitutionUser membership = new InstitutionUser();
-        membership.setInstitution(institution);
-        membership.setUser(user);
-        membership.setRole(request.getRole()); // DIRECTOR, OWNER, etc
-        membership.setStatus("ACTIVE");
-        institutionUserRepository.save(membership);
 
         return OnboardingDto.InstitutionCreatedResponse.builder()
                 .institutionId(institution.getId())
@@ -140,12 +187,38 @@ public class OnboardingService {
         Institution institution = institutionRepository.findById(institutionId)
                 .orElseThrow(() -> new RuntimeException("Institution not found"));
 
-        GroupEntity group = new GroupEntity();
-        group.setInstitution(institution);
-        group.setName(request.getName());
+        // Check for existing group with same name in this institution (Upsert Logic)
+        Optional<GroupEntity> existingGroup = groupRepository.findByInstitutionId(institutionId).stream()
+                .filter(g -> g.getName().equalsIgnoreCase(request.getName()))
+                .findFirst();
+
+        GroupEntity group;
+        if (existingGroup.isPresent()) {
+            group = existingGroup.get();
+        } else {
+            group = new GroupEntity();
+            group.setInstitution(institution);
+            group.setName(request.getName());
+            group.setActive(true);
+        }
+        
+        // Update fields (for both new and existing)
         group.setGradeLevel(request.getGradeLevel());
         group.setShift(request.getShift());
-        group.setActive(true);
+
+        // Assign Campus
+        if (request.getCampusId() != null) {
+            com.didacta.api.domain.campus.Campus campus = campusRepository.findById(request.getCampusId())
+                    .filter(c -> c.getInstitution().getId().equals(institutionId))
+                    .orElseThrow(() -> new RuntimeException("Campus not found or does not belong to institution"));
+            group.setCampus(campus);
+        } else {
+            // Find default campus (first one created)
+            com.didacta.api.domain.campus.Campus defaultCampus = campusRepository.findFirstByInstitutionId(institutionId)
+                    .orElseThrow(() -> new RuntimeException("No campus found for institution"));
+            group.setCampus(defaultCampus);
+        }
+
         groupRepository.save(group);
 
         return OnboardingDto.GroupCreatedResponse.builder()
@@ -195,5 +268,46 @@ public class OnboardingService {
                 .created(createdCount)
                 .nextStep("DONE")
                 .build();
+    }
+    @Transactional(readOnly = true)
+    public List<com.didacta.api.domain.campus.Campus> getCampuses() {
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null) return List.of();
+        return campusRepository.findAll().stream()
+                .filter(c -> c.getInstitution().getId().toString().equals(tenantId))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<GroupEntity> getGroups() {
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null) return List.of();
+        return groupRepository.findByInstitutionId(UUID.fromString(tenantId));
+    }
+
+    @Transactional(readOnly = true)
+    public OnboardingDto.CreateInstitutionRequest getInstitutionDetails(String keycloakUserId) {
+         AppUser user = appUserRepository.findByKeycloakUserId(keycloakUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+         
+         Optional<InstitutionUser> membership = institutionUserRepository.findByUser(user).stream().findFirst();
+         if (membership.isEmpty()) return null;
+         
+         Institution i = membership.get().getInstitution();
+         OnboardingDto.CreateInstitutionRequest req = new OnboardingDto.CreateInstitutionRequest();
+         req.setName(i.getName());
+         req.setMainLevel(i.getMainLevel());
+         req.setCountry(i.getCountry());
+         req.setTimezone(i.getTimezone());
+         req.setRole(membership.get().getRole());
+         
+         // Campus info?
+         Optional<com.didacta.api.domain.campus.Campus> c = campusRepository.findFirstByInstitutionId(i.getId());
+         if (c.isPresent() && !"Sede Principal".equals(c.get().getName())) {
+             req.setHasMultipleCampuses(true);
+             req.setCampusName(c.get().getName());
+         }
+         
+         return req;
     }
 }

@@ -1,4 +1,4 @@
-package com.didacta.api.domain.group;
+package com.didacta.api.domain.campus;
 
 import com.didacta.api.domain.institution.Institution;
 import jakarta.persistence.*;
@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "group_entity")
+@Table(name = "campus")
 @Getter
 @Setter
-public class GroupEntity {
+public class Campus {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,21 +25,10 @@ public class GroupEntity {
     @com.fasterxml.jackson.annotation.JsonIgnore
     private Institution institution;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "campus_id", nullable = false)
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    private com.didacta.api.domain.campus.Campus campus;
-
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "grade_level")
-    private String gradeLevel;
-
-    private String shift; // MATUTINO, VESPERTINO, MIXTO
-
-    @Column(nullable = false)
-    private Boolean active = true;
+    private String address;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

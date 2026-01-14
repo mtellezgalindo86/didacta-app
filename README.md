@@ -2,55 +2,87 @@
 
 Sistema de gestión escolar con arquitectura moderna basada en Spring Boot, React y Keycloak.
 
-## Arquitectura
+## 🏗 Arquitectura
 
 - **Frontend**: React + Vite + TypeScript + TailwindCSS (`didacta-web`)
-- **Backend API**: Spring Boot 3 + Java 21 (`didacta-api`)
+- **Backend API**: Spring Boot 3 + Java 17 (`didacta-api`)
 - **Identidad**: Keycloak 24 (OIDC/OAuth2)
 - **Base de Datos**: PostgreSQL 16
 - **Infraestructura**: Docker Compose
 
-## Requisitos Previos
+---
 
+## 🚀 Opción 1: Inicio Rápido (Modo Demo)
+*Recomendado para ver la aplicación funcionando sin instalar dependencias de desarrollo.*
+
+### Requisitos:
 - Docker & Docker Compose
-- Node.js 18+ (Opcional, para desarrollo local)
-- Java 17 (Opcional, para desarrollo local)
 
-## Instrucciones de Inicio
-
-1. **Levantar la infraestructura completa:**
+### Instrucciones:
+1. clonar el repositorio y ejecutar:
    ```bash
    docker compose up --build
    ```
-   *Nota: La primera vez tomará unos minutos mientras se descargan imágenes y se compilan los servicios.*
+2. Esperar unos minutos. La primera vez descargará imágenes y compilará todo.
 
-2. **Acceder a los servicios:**
-   - **Frontend (Web)**: [http://localhost:5173](http://localhost:5173)
-   - **Keycloak (Auth)**: [http://localhost:8081](http://localhost:8081)
-     - Usuario admin: `admin` / `admin`
-     - Realm configurado: `didacta`
-   - **API (Backend)**: [http://localhost:8088](http://localhost:8088)
-     - Swagger UI (si habilitado): [http://localhost:8088/swagger-ui.html](http://localhost:8088/swagger-ui.html)
+---
 
-## Flujo de Prueba (Onboarding)
+## 🛠 Opción 2: Modo Desarrollador (Híbrido)
+*Recomendado para trabajar en el código ("A como lo tenemos ahorita").*
 
-1. Abrir `http://localhost:5173`
-2. Clic en **"Crear cuenta con Didacta"**.
-3. Completar registro en Keycloak (Nombre, Email, Password, seleccionar Rol).
-   - *Nota: Asegúrese de usar un email válido formato, aunque no se envíe correo real.*
-4. Tras registro, será redirigido al **Onboarding**.
-5. **Paso 1: Institución** - Crear su institución.
-6. **Paso 2: Grupo** - Crear su primer grupo.
-7. **Paso 3: Colaboradores** - Agregar profesores (simulado).
-8. **Dashboard** - Ver pantalla principal.
+### Requisitos:
+- Java 17+
+- Node.js 18+
+- Docker (solo para infraestructura)
 
-## Desarrollo
+### 1. Levantar Infraestructura (Base de Datos & Keycloak)
+En una terminal:
+```bash
+docker compose up -d postgres keycloak
+```
+*Esto corre PostgreSQL en puerto `5432` y Keycloak en `8081`.*
 
-### Estructura de Proyecto
-- `/didacta-api`: Código fuente Backend.
-- `/didacta-web`: Código fuente Frontend.
-- `/infra`: Configuraciones de infraestructura (Keycloak themes, Postgres schemas).
+### 2. Ejecutar Backend (API)
+En otra terminal desde la carpeta `didacta-api`:
+```bash
+cd didacta-api
+./gradlew bootRun
+```
+*El backend iniciará en `http://localhost:8088`.*
 
-### Comandos Útiles
-- Reiniciar solo backend: `docker compose restart didacta-api`
-- Ver logs: `docker compose logs -f`
+### 3. Ejecutar Frontend (Web)
+En otra terminal desde la carpeta `didacta-web`:
+```bash
+cd didacta-web
+npm install  # Solo la primera vez
+npm run dev
+```
+*El frontend iniciará en `http://localhost:5173`.*
+
+---
+
+## 🔑 Acceso y Credenciales
+
+### 1. Aplicación Web (Frontend)
+- **URL**: [http://localhost:5173](http://localhost:5173)
+- **Flujo**:
+    1. Clic en **"Crear cuenta con Didacta"**.
+    2. Registrarse en Keycloak.
+    3. Completar el Onboarding (Institución -> Grupo -> Colaboradores).
+
+### 2. Panel de Administración (Keycloak)
+- **URL**: [http://localhost:8081](http://localhost:8081)
+- **Usuario**: `admin`
+- **Contraseña**: `admin`
+- **Realm**: `didacta`
+
+### 3. API & Documentación
+- **Swagger UI**: [http://localhost:8088/swagger-ui.html](http://localhost:8088/swagger-ui.html) (Si el backend está corriendo)
+
+---
+
+## ⚠️ Solución de Problemas Comunes
+
+- **Error 500 al crear cuenta**: Asegúrese de que el backend terminó de iniciar completamente antes de intentar el registro.
+- **Keycloak no carga**: Verifique que el contenedor `didacta-keycloak` esté "healthy" (`docker ps`).
+- **Problemas de CORS**: Asegúrese de acceder siempre por `localhost` y no `127.0.0.1` para mantener consistencia con los tokens.

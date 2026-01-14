@@ -37,10 +37,23 @@ public class OnboardingController {
     }
 
     @PostMapping("/onboarding/collaborators")
-    public ResponseEntity<OnboardingDto.CollaboratorsCreatedResponse> addCollaborators(
-            @AuthenticationPrincipal Jwt jwt,
-            @RequestBody OnboardingDto.CreateCollaboratorsRequest request) {
-        String sub = jwt.getClaimAsString("sub");
-        return ResponseEntity.ok(onboardingService.createCollaborators(sub, request));
+    public OnboardingDto.CollaboratorsCreatedResponse createCollaborators(@AuthenticationPrincipal Jwt jwt,
+                                                                 @RequestBody OnboardingDto.CreateCollaboratorsRequest request) {
+        return onboardingService.createCollaborators(jwt.getSubject(), request);
+    }
+
+    @GetMapping("/onboarding/campuses")
+    public java.util.List<com.didacta.api.domain.campus.Campus> getCampuses() {
+        return onboardingService.getCampuses();
+    }
+
+    @GetMapping("/onboarding/groups")
+    public java.util.List<com.didacta.api.domain.group.GroupEntity> getGroups() {
+        return onboardingService.getGroups();
+    }
+
+    @GetMapping("/onboarding/institution-details")
+    public OnboardingDto.CreateInstitutionRequest getInstitutionDetails(@AuthenticationPrincipal Jwt jwt) {
+        return onboardingService.getInstitutionDetails(jwt.getSubject());
     }
 }

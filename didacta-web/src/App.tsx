@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import DashboardView from './views/DashboardView';
+import DashboardLayout from './views/DashboardLayout';
 import AuthGuard from './components/AuthGuard';
 import Step1Institution from './views/onboarding/Step1Institution';
 import Step2Group from './views/onboarding/Step2Group';
@@ -15,30 +16,18 @@ export default function App() {
       <Routes>
 
 
-        {/* Protected Routes */}
-        <Route path="/dashboard" element={
-          <AuthGuard>
-            <DashboardView />
-          </AuthGuard>
-        } />
+        {/* Protected Routes Layout */}
+        <Route element={<AuthGuard />}>
+          <Route path="/dashboard" element={
+            <DashboardLayout>
+              <DashboardView />
+            </DashboardLayout>
+          } />
 
-        <Route path="/onboarding/step-1" element={
-          <AuthGuard>
-            <Step1Institution />
-          </AuthGuard>
-        } />
-
-        <Route path="/onboarding/step-2" element={
-          <AuthGuard>
-            <Step2Group />
-          </AuthGuard>
-        } />
-
-        <Route path="/onboarding/step-3" element={
-          <AuthGuard>
-            <Step3Collaborator />
-          </AuthGuard>
-        } />
+          <Route path="/onboarding/step-1" element={<Step1Institution />} />
+          <Route path="/onboarding/step-2" element={<Step2Group />} />
+          <Route path="/onboarding/step-3" element={<Step3Collaborator />} />
+        </Route>
 
         {/* Default Redirect */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

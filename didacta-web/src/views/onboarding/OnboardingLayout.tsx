@@ -1,28 +1,30 @@
 import React from 'react';
 
+import UserProfileMenu from '../../components/UserProfileMenu';
+
 interface OnboardingLayoutProps {
     step: number;
     title: string;
     subtitle: string;
     children: React.ReactNode;
+    maxWidth?: string;
 }
 
-export default function OnboardingLayout({ step, title, subtitle, children }: OnboardingLayoutProps) {
+export default function OnboardingLayout({ step, title, subtitle, children, maxWidth = "max-w-2xl" }: OnboardingLayoutProps) {
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            {/* Header */}
-            <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center fixed w-full top-0 z-50">
-                <div className="text-xl font-bold text-blue-600 flex items-center gap-2">
-                    <img src="/logo.png" alt="Didacta Logo" className="h-8" />
-                </div>
-                <div className="text-sm text-gray-400">
-                    {step < 3 ? 'Casi terminamos' : 'Último paso'}
+        <div className="min-h-screen bg-white">
+            <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <img src="/logo.png" alt="Didacta" className="h-8 w-auto" />
+                    </div>
+                    <UserProfileMenu />
                 </div>
             </header>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col items-center justify-center p-8 pt-24">
-                <div className="max-w-2xl w-full">
+                <div className={`${maxWidth} w-full`}>
                     <div className="mb-8">
                         <div className="flex items-center justify-between text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">
                             <span>Paso {step} de 3</span>

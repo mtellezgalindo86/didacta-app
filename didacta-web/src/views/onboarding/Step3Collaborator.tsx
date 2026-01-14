@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/didactaApi';
 import OnboardingLayout from './OnboardingLayout';
@@ -14,6 +14,7 @@ interface Collaborator {
 export default function Step3Collaborator() {
     const navigate = useNavigate();
     const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+    const [groups, setGroups] = useState<any[]>([]);
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -21,6 +22,13 @@ export default function Step3Collaborator() {
         groupId: ''
     });
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        // Fetch groups
+        api.get('/api/onboarding/groups')
+            .then(res => setGroups(res.data))
+            .catch(console.error);
+    }, []);
 
     const addCollaborator = () => {
         if (!formData.email || !formData.role) return;
@@ -39,7 +47,7 @@ export default function Step3Collaborator() {
         try {
             await api.post('/api/onboarding/collaborators', { collaborators });
             navigate('/dashboard');
-            window.location.reload();
+
         } catch (error) {
             console.error(error);
             alert('Error al guardar colaboradores');
@@ -53,6 +61,7 @@ export default function Step3Collaborator() {
             step={3}
             title="Configura tu equipo"
             subtitle="Añade docentes y administrativos. Recibirán un correo de activación."
+            maxWidth="max-w-6xl"
         >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Form */}
@@ -94,12 +103,21 @@ export default function Step3Collaborator() {
                                     <option value="">Seleccionar</option>
                                     <option value="TEACHER">Docente</option>
                                     <option value="COORDINATOR">Coordinador</option>
+                                    <option value="ADMIN">Administrativo</option>
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">Grupo</label>
-                                <select disabled className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400">
-                                    <option>Asignar</option>
+                                <select
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white disabled:bg-gray-50"
+                                    disabled={formData.role !== 'TEACHER' && formData.role !== 'COORDINATOR'}
+                                    value={formData.groupId}
+                                    onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
+                                >
+                                    <option value="">Asignar</option>
+                                    {groups.map(g => (
+                                        <option key={g.id} value={g.id}>{g.name}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -131,6 +149,7 @@ export default function Step3Collaborator() {
                                 <tr>
                                     <th className="px-6 py-3">USUARIO</th>
                                     <th className="px-6 py-3">ROL</th>
+                                    <th className="px-6 py-3">GRUPO</th>
                                     <th className="px-6 py-3">ESTADO</th>
                                     <th className="px-6 py-3 text-right">ACCIONES</th>
                                 </tr>
@@ -138,34 +157,46 @@ export default function Step3Collaborator() {
                             <tbody className="divide-y divide-gray-100">
                                 {collaborators.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
                                             Agrega más colaboradores usando el formulario
                                         </td>
                                     </tr>
                                 ) : (
-                                    collaborators.map((c, i) => (
-                                        <tr key={i} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900">{c.fullName || "Sin nombre"}</div>
-                                                <div className="text-gray-500 text-xs">{c.email}</div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {c.role === 'TEACHER' ? 'Docente' : 'Coordinador'}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">Pendiente</span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <button onClick={() => removeCollaborator(i)} className="text-red-500 hover:text-red-700">🗑</button>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    collaborators.map((c, i) => {
+                                        const groupName = groups.find(g => g.id === c.groupId)?.name || '-';
+                                        return (
+                                            <tr key={i} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4">
+                                                    <div className="font-medium text-gray-900">{c.fullName || "Sin nombre"}</div>
+                                                    <div className="text-gray-500 text-xs">{c.email}</div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {c.role === 'TEACHER' ? 'Docente' : c.role === 'COORDINATOR' ? 'Coordinador' : 'Administrativo'}
+                                                </td>
+                                                <td className="px-6 py-4 text-gray-500">
+                                                    {groupName}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">Pendiente</span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button onClick={() => removeCollaborator(i)} className="text-red-500 hover:text-red-700">🗑</button>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })
                                 )}
                             </tbody>
                         </table>
                     </div>
 
-                    <div className="flex justify-end mt-8">
+                    <div className="flex justify-between mt-8">
+                        <button
+                            onClick={() => navigate('/onboarding/step-2')}
+                            className="text-gray-500 font-medium hover:text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-100 transition"
+                        >
+                            ← Volver
+                        </button>
                         <button
                             onClick={handleFinish}
                             disabled={loading}

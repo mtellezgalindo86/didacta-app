@@ -45,7 +45,6 @@ public class UserSyncFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    @Transactional
     public void syncUser(String keycloakUserId, String email, String firstName, String lastName) {
         Optional<AppUser> optionalUser = appUserRepository.findByKeycloakUserId(keycloakUserId);
 
@@ -88,8 +87,12 @@ public class UserSyncFilter extends OncePerRequestFilter {
                 user.setEmail(email);
                 user.setFirstName(firstName);
                 user.setLastName(lastName);
-                appUserRepository.save(user);
-                log.info("Created new user: {}", email);
+                try {
+                    appUserRepository.save(user);
+                    log.info("Created new user: {}", email);
+                } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                    log.warn("Race condition detected: User {} already created by another request. Ignoring.", email);
+                }
             }
         }
     }
