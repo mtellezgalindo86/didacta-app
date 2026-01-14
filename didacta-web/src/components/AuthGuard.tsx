@@ -51,18 +51,26 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             }
 
             try {
-                // Fetch data
-                const response = await api.get('/api/me');
-                if (response.data.tenant?.institutionId) {
-                    localStorage.setItem('didacta_institution_id', response.data.tenant.institutionId);
+                let attempts = 0;
+                const maxAttempts = 3;
+                while (attempts < maxAttempts) {
+                    try {
+                        const response = await api.get('/api/me');
+                        if (response.data.tenant?.institutionId) {
+                            localStorage.setItem('didacta_institution_id', response.data.tenant.institutionId);
+                        }
+                        setUserData(response.data);
+                        return;
+                    } catch (retryErr) {
+                        attempts++;
+                        console.warn(`Auth Check attempt ${attempts} failed`);
+                        if (attempts >= maxAttempts) {
+                            setError(retryErr);
+                            break;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
                 }
-                setUserData(response.data);
-            } catch (err: any) {
-                console.error("Auth Init Error", err);
-                if (err.response?.status === 401 || err.response?.status === 403) {
-                    localStorage.removeItem('didacta_institution_id');
-                }
-                setError(err);
             } finally {
                 setLoading(false);
             }
