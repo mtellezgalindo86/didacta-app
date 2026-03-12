@@ -47,7 +47,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                 sessionStorage.setItem('didacta_init_done', 'true');
                 isInitialCheck = false;
             } else {
-                isInitialCheck = false; // Skip if already done
+                isInitialCheck = false;
             }
 
             try {
@@ -76,24 +76,15 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             }
         };
         initAuth();
-    }, []); // Empty dependency array = Mount only
+    }, []);
 
     // EFFECT 2: NAVIGATION CHECKS (Runs on location change)
     useEffect(() => {
-        if (!userData || loading) return; // Wait for init
+        if (!userData || loading) return;
 
-        const { onboarding } = userData;
-        const nextStep = onboarding.nextStep;
         const currentPath = location.pathname;
 
-        // Re-fetch in background to keep state sync? 
-        // For MVP, we'll verify "me" silently if needed, but let's trust local check for speed first
-        // If we want to support step progression, we should probably update userData when we arrive at a new step?
-        // Actually, the Views (Step1, Step2) update the backend.
-        // So we should ideally re-fetch "me" on navigation but SILENTLY.
-
         const validateRoute = async () => {
-            // Optional: Silent refresh of user status
             try {
                 const res = await api.get('/api/me');
                 if (res.data.tenant?.institutionId) {
@@ -107,12 +98,20 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                         navigate('/dashboard');
                     }
                 } else {
-                    const stepOrder: Record<string, number> = { 'STEP_1': 1, 'STEP_2': 2, 'STEP_3': 3 };
-                    const maxStep = stepOrder[freshStep] || 1;
+                    const stepOrder: Record<string, number> = {
+                        'STEP_0': 0,
+                        'STEP_1': 1,
+                        'STEP_2': 2,
+                        'STEP_3': 3,
+                        'STEP_4': 4,
+                        'STEP_5': 5,
+                    };
+                    const maxStep = stepOrder[freshStep] ?? 0;
                     const currentStep = pathToStep(currentPath);
 
-                    if (currentStep > 0) {
-                        if (currentStep > maxStep) {
+                    if (currentStep >= 0) {
+                        // Allow step-0 (welcome) always; guard only steps beyond maxStep
+                        if (currentStep > 0 && currentStep > maxStep) {
                             navigate(stepToPath(freshStep));
                         }
                     } else {
@@ -130,18 +129,24 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
     function stepToPath(step: string) {
         switch (step) {
+            case 'STEP_0': return '/onboarding/step-0';
             case 'STEP_1': return '/onboarding/step-1';
             case 'STEP_2': return '/onboarding/step-2';
             case 'STEP_3': return '/onboarding/step-3';
+            case 'STEP_4': return '/onboarding/step-4';
+            case 'STEP_5': return '/onboarding/step-5';
             default: return '/dashboard';
         }
     }
 
     function pathToStep(path: string): number {
+        if (path.includes('step-0')) return 0;
         if (path.includes('step-1')) return 1;
         if (path.includes('step-2')) return 2;
         if (path.includes('step-3')) return 3;
-        return 0;
+        if (path.includes('step-4')) return 4;
+        if (path.includes('step-5')) return 5;
+        return -1;
     }
 
     if (loading) {
@@ -156,7 +161,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                     <p className="text-gray-600 mb-4">No pudimos verificar tu estado. Intenta recargar.</p>
                     <button
                         onClick={() => {
-                            // Clear storage on retry just in case
                             localStorage.removeItem('didacta_institution_id');
                             window.location.reload();
                         }}

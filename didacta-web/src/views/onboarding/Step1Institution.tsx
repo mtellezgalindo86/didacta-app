@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/didactaApi';
 import OnboardingLayout from './OnboardingLayout';
+import InlineError from '../../components/InlineError';
 
 export default function Step1Institution() {
     const navigate = useNavigate();
@@ -15,9 +16,9 @@ export default function Step1Institution() {
         campusName: ''
     });
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Try to fetch existing details (in case of Back navigation)
         api.get('/api/onboarding/institution-details')
             .then(res => {
                 if (res.data) {
@@ -33,24 +34,22 @@ export default function Step1Institution() {
                     }));
                 }
             })
-            .catch(() => {
-                // Ignore error (404/403) if not created yet
-            });
+            .catch(() => {});
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError(null);
         try {
             const response = await api.post('/api/onboarding/institution', formData);
             if (response.data && response.data.institutionId) {
                 localStorage.setItem('didacta_institution_id', response.data.institutionId);
             }
             navigate('/onboarding/step-2');
-
-        } catch (error) {
-            console.error(error);
-            alert('Error al crear institución');
+        } catch (err) {
+            console.error(err);
+            setError('No pudimos guardar los datos. Intenta de nuevo.');
         } finally {
             setLoading(false);
         }
@@ -71,6 +70,8 @@ export default function Step1Institution() {
                 </div>
             )}
             <form onSubmit={handleSubmit} className={`space-y-6 ${loading ? 'opacity-20 pointer-events-none' : ''}`}>
+                <InlineError message={error} />
+
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la institución *</label>
                     <input
@@ -92,6 +93,8 @@ export default function Step1Institution() {
                         onChange={(e) => setFormData({ ...formData, mainLevel: e.target.value })}
                     >
                         <option value="">Selecciona un nivel</option>
+                        <option value="MATERNAL">Maternal</option>
+                        <option value="INICIAL">Inicial</option>
                         <option value="PREESCOLAR">Preescolar</option>
                         <option value="PRIMARIA">Primaria</option>
                         <option value="SECUNDARIA">Secundaria</option>

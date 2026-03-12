@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/didactaApi';
 import OnboardingLayout from './OnboardingLayout';
+import InlineError from '../../components/InlineError';
+
+interface GradeOption {
+    id: string;
+    label: string;
+}
 
 export default function Step2Group() {
     const navigate = useNavigate();
@@ -12,7 +18,9 @@ export default function Step2Group() {
         campusId: ''
     });
     const [campuses, setCampuses] = useState<any[]>([]);
+    const [grades, setGrades] = useState<GradeOption[]>([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         // Fetch Campuses
@@ -25,16 +33,30 @@ export default function Step2Group() {
             })
             .catch(console.error);
 
+        // Fetch institution level to load grades
+        api.get('/api/onboarding/institution-level')
+            .then(res => {
+                if (res.data?.level) {
+                    return api.get(`/api/catalogs/grades?level=${res.data.level}`);
+                }
+            })
+            .then(res => {
+                if (res?.data) {
+                    setGrades(res.data);
+                }
+            })
+            .catch(console.error);
+
         // Fetch Existing Groups (to pre-fill if going back)
         api.get('/api/onboarding/groups')
             .then(res => {
                 if (res.data && res.data.length > 0) {
-                    const existing = res.data[0]; // Take the first one for MVP Step 2
+                    const existing = res.data[0];
                     setFormData(prev => ({
                         ...prev,
                         name: existing.name,
-                        gradeLevel: existing.gradeLevel,
-                        shift: existing.shift,
+                        gradeLevel: existing.gradeLevel || '',
+                        shift: existing.shift || 'MATUTINO',
                         campusId: existing.campus ? existing.campus.id : prev.campusId
                     }));
                 }
@@ -45,13 +67,13 @@ export default function Step2Group() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError(null);
         try {
             await api.post('/api/onboarding/group', formData);
             navigate('/onboarding/step-3');
-
-        } catch (error) {
-            console.error(error);
-            alert('Error al crear grupo');
+        } catch (err) {
+            console.error(err);
+            setError('Error al crear el grupo. Verifica los datos.');
         } finally {
             setLoading(false);
         }
@@ -64,7 +86,9 @@ export default function Step2Group() {
             subtitle="Dale identidad a tu clase. Podrás gestionar alumnos y asignaturas una vez creado el espacio."
         >
             <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
-                {/* Campus Selection - Show only if > 1 or user explicitly wants to see */}
+                <InlineError message={error} />
+
+                {/* Campus Selection - Show only if > 1 */}
                 {campuses.length > 1 && (
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Plantel / Sede</label>
@@ -75,7 +99,7 @@ export default function Step2Group() {
                             onChange={(e) => setFormData({ ...formData, campusId: e.target.value })}
                         >
                             <option value="">Selecciona un plantel</option>
-                            {campuses.map(c => (
+                            {campuses.map((c: any) => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                         </select>
@@ -95,15 +119,29 @@ export default function Step2Group() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nivel educativo / Grado</label>
-                    <input
-                        type="text"
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="Ej. 1ro de Primaria"
-                        value={formData.gradeLevel}
-                        onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Grado</label>
+                    {grades.length > 0 ? (
+                        <select
+                            required
+                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                            value={formData.gradeLevel}
+                            onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
+                        >
+                            <option value="">Selecciona un grado</option>
+                            {grades.map(g => (
+                                <option key={g.id} value={g.id}>{g.label}</option>
+                            ))}
+                        </select>
+                    ) : (
+                        <input
+                            type="text"
+                            required
+                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Ej. 1ro de Primaria"
+                            value={formData.gradeLevel}
+                            onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
+                        />
+                    )}
                 </div>
 
                 <div>

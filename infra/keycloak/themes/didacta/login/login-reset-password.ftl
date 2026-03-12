@@ -10,6 +10,12 @@
         <h1 id="kc-page-title">Recuperar contraseña</h1>
         <p class="didacta-subtitle">Ingresa tu correo electrónico y te enviaremos instrucciones para crear una nueva contraseña.</p>
 
+        <#if message?has_content && (message.type = 'error' || message.type = 'warning' || message.type = 'success' || message.type = 'info')>
+            <div class="pf-c-alert pf-m-${message.type}">
+                ${kcSanitize(message.summary)?no_esc}
+            </div>
+        </#if>
+
         <form id="kc-reset-password-form" class="${properties.kcFormClass!}" action="${url.loginAction}" method="post">
             <div class="form-group">
                 <label for="username" class="form-label"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if></label>

@@ -11,6 +11,8 @@ interface OnboardingLayoutProps {
 }
 
 export default function OnboardingLayout({ step, title, subtitle, children, maxWidth = "max-w-2xl" }: OnboardingLayoutProps) {
+    const totalSteps = 5;
+
     return (
         <div className="min-h-screen bg-white">
             <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
@@ -27,10 +29,10 @@ export default function OnboardingLayout({ step, title, subtitle, children, maxW
                 <div className={`${maxWidth} w-full`}>
                     <div className="mb-8">
                         <div className="flex items-center justify-between text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">
-                            <span>Paso {step} de 3</span>
+                            <span>Paso {step} de {totalSteps}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-1.5">
-                            <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${(step / 3) * 100}%` }}></div>
+                            <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{ width: `${(step / totalSteps) * 100}%` }}></div>
                         </div>
                     </div>
 

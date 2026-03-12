@@ -10,28 +10,43 @@
         <h1 id="kc-page-title">Crea tu cuenta en Didacta</h1>
         <p class="didacta-subtitle">Empieza creando tu usuario. La configuración de tu institución viene después.</p>
 
+        <#if message?has_content && (message.type = 'error' || message.type = 'warning' || message.type = 'success' || message.type = 'info')>
+            <div class="pf-c-alert pf-m-${message.type}">
+                ${kcSanitize(message.summary)?no_esc}
+            </div>
+        </#if>
+
         <form id="kc-register-form" class="${properties.kcFormClass!}" action="${url.registrationAction}" method="post">
-            
+
             <div class="form-row">
                 <div class="form-group half-width">
                     <label for="firstName" class="form-label">Nombre</label>
-                    <input type="text" id="firstName" class="pf-c-form-control" name="firstName"
+                    <input type="text" id="firstName" class="pf-c-form-control<#if messagesPerField.existsError('firstName')> pf-m-error</#if>" name="firstName"
                            value="${(register.formData.firstName!'')}" placeholder="Tu nombre" />
+                    <#if messagesPerField.existsError('firstName')>
+                        <span class="field-error">${kcSanitize(messagesPerField.get('firstName'))?no_esc}</span>
+                    </#if>
                 </div>
 
                 <div class="form-group half-width">
                     <label for="lastName" class="form-label">Apellido</label>
-                    <input type="text" id="lastName" class="pf-c-form-control" name="lastName"
+                    <input type="text" id="lastName" class="pf-c-form-control<#if messagesPerField.existsError('lastName')> pf-m-error</#if>" name="lastName"
                            value="${(register.formData.lastName!'')}" placeholder="Tu apellido" />
+                    <#if messagesPerField.existsError('lastName')>
+                        <span class="field-error">${kcSanitize(messagesPerField.get('lastName'))?no_esc}</span>
+                    </#if>
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="email" class="form-label">Correo electrónico</label>
                 <div class="input-icon-wrapper">
-                    <input type="text" id="email" class="pf-c-form-control" name="email"
+                    <input type="text" id="email" class="pf-c-form-control<#if messagesPerField.existsError('email')> pf-m-error</#if>" name="email"
                            value="${(register.formData.email!'')}" autocomplete="email" placeholder="nombre@institucion.com" />
                 </div>
+                <#if messagesPerField.existsError('email')>
+                    <span class="field-error">${kcSanitize(messagesPerField.get('email'))?no_esc}</span>
+                </#if>
             </div>
 
             <#if !realm.registrationEmailAsUsername>
@@ -44,14 +59,20 @@
 
             <div class="form-group">
                 <label for="password" class="form-label">Contraseña</label>
-                <input type="password" id="password" class="pf-c-form-control" name="password"
+                <input type="password" id="password" class="pf-c-form-control<#if messagesPerField.existsError('password')> pf-m-error</#if>" name="password"
                        autocomplete="new-password" placeholder="Mínimo 8 caracteres" />
+                <#if messagesPerField.existsError('password')>
+                    <span class="field-error">${kcSanitize(messagesPerField.get('password'))?no_esc}</span>
+                </#if>
             </div>
 
             <div class="form-group">
                 <label for="password-confirm" class="form-label">Confirmar contraseña</label>
-                <input type="password" id="password-confirm" class="pf-c-form-control" name="password-confirm"
+                <input type="password" id="password-confirm" class="pf-c-form-control<#if messagesPerField.existsError('password-confirm')> pf-m-error</#if>" name="password-confirm"
                        placeholder="Repite tu contraseña" />
+                <#if messagesPerField.existsError('password-confirm')>
+                    <span class="field-error">${kcSanitize(messagesPerField.get('password-confirm'))?no_esc}</span>
+                </#if>
             </div>
 
             <!-- Role Selection with Solid SVGs matching design -->

@@ -9,15 +9,16 @@
         <h1 id="kc-page-title">Accede a tu institución</h1>
         <p class="didacta-subtitle">Evidencia diaria y visibilidad estratégica para la dirección académica.</p>
 
+        <#if message?has_content && (message.type = 'error' || message.type = 'warning' || message.type = 'success' || message.type = 'info')>
+            <div class="pf-c-alert pf-m-${message.type}">
+                ${kcSanitize(message.summary)?no_esc}
+            </div>
+        </#if>
+
         <div id="kc-form">
           <div id="kc-form-wrapper">
             <#if realm.password>
                 <form id="kc-form-login" onsubmit="login.disabled = true; return true;" action="${url.loginAction}" method="post">
-                    <#if messagesPerField.existsError('username','password')>
-                        <div class="pf-c-alert pf-m-danger">
-                             Invalid username or password.
-                        </div>
-                    </#if>
 
                     <div class="form-group">
                         <label for="username" class="sr-only"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if></label>

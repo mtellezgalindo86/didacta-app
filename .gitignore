@@ -31,3 +31,5 @@ out/
 # Spring Boot / Env
 .env
 config/application.yml
+.claude/
+.mcp.json
