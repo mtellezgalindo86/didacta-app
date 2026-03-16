@@ -31,6 +31,11 @@ public class GroupEntity {
     @com.fasterxml.jackson.annotation.JsonIgnore
     private Campus campus;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "section_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private AcademicSection section;
+
     @Column(nullable = false)
     private String name;
 

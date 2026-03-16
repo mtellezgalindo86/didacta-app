@@ -90,4 +90,9 @@ public class OnboardingController {
     public OnboardingCommand.CreateInstitution getInstitutionDetails(@AuthenticationPrincipal Jwt jwt) {
         return getInstitutionInfo.getDetails(jwt.getSubject());
     }
+
+    @GetMapping("/onboarding/sections")
+    public List<OnboardingResult.AcademicSectionDto> getSections() {
+        return getInstitutionInfo.getSections();
+    }
 }

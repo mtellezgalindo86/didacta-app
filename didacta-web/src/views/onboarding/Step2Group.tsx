@@ -9,15 +9,33 @@ interface GradeOption {
     label: string;
 }
 
+interface SectionOption {
+    id: string;
+    level: string;
+    accreditationType: string;
+}
+
+const LEVEL_LABELS: Record<string, string> = {
+    MATERNAL: 'Maternal',
+    INICIAL: 'Inicial',
+    PREESCOLAR: 'Preescolar',
+    PRIMARIA: 'Primaria',
+    SECUNDARIA: 'Secundaria',
+    MEDIA_SUPERIOR: 'Media Superior',
+    EMPRESARIAL: 'Empresarial',
+};
+
 export default function Step2Group() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: '',
         gradeLevel: '',
         shift: 'MATUTINO',
-        campusId: ''
+        campusId: '',
+        sectionId: '',
     });
-    const [campuses, setCampuses] = useState<any[]>([]);
+    const [campuses, setCampuses] = useState<{ id: string; name: string }[]>([]);
+    const [sections, setSections] = useState<SectionOption[]>([]);
     const [grades, setGrades] = useState<GradeOption[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -33,16 +51,14 @@ export default function Step2Group() {
             })
             .catch(console.error);
 
-        // Fetch institution level to load grades
-        api.get('/api/onboarding/institution-level')
+        // Fetch Sections
+        api.get('/api/onboarding/sections')
             .then(res => {
-                if (res.data?.level) {
-                    return api.get(`/api/catalogs/grades?level=${res.data.level}`);
-                }
-            })
-            .then(res => {
-                if (res?.data) {
-                    setGrades(res.data);
+                setSections(res.data);
+                if (res.data.length === 1) {
+                    setFormData(prev => ({ ...prev, sectionId: res.data[0].id }));
+                    // Load grades for the single section's level
+                    loadGradesForLevel(res.data[0].level);
                 }
             })
             .catch(console.error);
@@ -57,12 +73,33 @@ export default function Step2Group() {
                         name: existing.name,
                         gradeLevel: existing.gradeLevel || '',
                         shift: existing.shift || 'MATUTINO',
-                        campusId: existing.campus ? existing.campus.id : prev.campusId
+                        campusId: existing.campus ? existing.campus.id : prev.campusId,
+                        sectionId: existing.sectionId || prev.sectionId,
                     }));
                 }
             })
             .catch(console.error);
     }, []);
+
+    const loadGradesForLevel = (level: string) => {
+        api.get(`/api/catalogs/grades?level=${level}`)
+            .then(res => {
+                if (res?.data) {
+                    setGrades(res.data);
+                }
+            })
+            .catch(console.error);
+    };
+
+    const handleSectionChange = (sectionId: string) => {
+        setFormData(prev => ({ ...prev, sectionId, gradeLevel: '' }));
+        const section = sections.find(s => s.id === sectionId);
+        if (section) {
+            loadGradesForLevel(section.level);
+        } else {
+            setGrades([]);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,7 +120,7 @@ export default function Step2Group() {
         <OnboardingLayout
             step={2}
             title="Configura tu primer grupo"
-            subtitle="Dale identidad a tu clase. Podrás gestionar alumnos y asignaturas una vez creado el espacio."
+            subtitle="Dale identidad a tu clase. Podras gestionar alumnos y asignaturas una vez creado el espacio."
         >
             <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
                 <InlineError message={error} />
@@ -99,8 +136,28 @@ export default function Step2Group() {
                             onChange={(e) => setFormData({ ...formData, campusId: e.target.value })}
                         >
                             <option value="">Selecciona un plantel</option>
-                            {campuses.map((c: any) => (
+                            {campuses.map((c) => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                {/* Section Selection - Show only if > 1 */}
+                {sections.length > 1 && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nivel educativo</label>
+                        <select
+                            required
+                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                            value={formData.sectionId}
+                            onChange={(e) => handleSectionChange(e.target.value)}
+                        >
+                            <option value="">Selecciona un nivel</option>
+                            {sections.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                    {LEVEL_LABELS[s.level] || s.level}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -169,14 +226,14 @@ export default function Step2Group() {
                         onClick={() => navigate('/onboarding/step-1')}
                         className="text-gray-500 font-medium hover:text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-100 transition"
                     >
-                        ← Volver
+                        Volver
                     </button>
                     <button
                         type="submit"
-                        disabled={loading || (campuses.length > 1 && !formData.campusId)}
+                        disabled={loading || (campuses.length > 1 && !formData.campusId) || (sections.length > 1 && !formData.sectionId)}
                         className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 shadow-sm shadow-blue-200 flex-1"
                     >
-                        {loading ? 'Guardando...' : 'Continuar →'}
+                        {loading ? 'Guardando...' : 'Continuar'}
                     </button>
                 </div>
             </form>
