@@ -35,6 +35,11 @@ public class CalendarTemplatePersistenceAdapter implements CalendarTemplateRepos
     }
 
     @Override
+    public List<CalendarTemplate> findByApplicableLevelAndAuthority(String level, String authority) {
+        return templateRepo.findByApplicableLevelAndAuthority(level, authority);
+    }
+
+    @Override
     public List<CalendarTemplateEvent> findEventsByTemplateId(UUID templateId) {
         return eventRepo.findByTemplateIdOrderBySortOrderAsc(templateId);
     }

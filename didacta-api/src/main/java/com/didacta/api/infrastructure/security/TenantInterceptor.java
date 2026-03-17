@@ -27,6 +27,10 @@ public class TenantInterceptor extends OncePerRequestFilter {
     private final MembershipRepositoryPort membershipRepository;
     private final UserRepositoryPort userRepository;
 
+    private static final java.util.Set<String> TENANT_EXEMPT_PATHS = java.util.Set.of(
+            "/api/me", "/api/health", "/api/onboarding/institution"
+    );
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -34,7 +38,13 @@ public class TenantInterceptor extends OncePerRequestFilter {
         TenantContext.clear();
 
         try {
+            String requestPath = request.getRequestURI();
             String institutionIdHeader = request.getHeader(HEADER_INSTITUTION_ID);
+
+            // Skip tenant validation for exempt paths (global endpoints)
+            if (TENANT_EXEMPT_PATHS.contains(requestPath)) {
+                institutionIdHeader = null;
+            }
 
             // If no header, allow request (Global scope, e.g. /api/me)
             if (institutionIdHeader != null && !institutionIdHeader.isBlank()) {
