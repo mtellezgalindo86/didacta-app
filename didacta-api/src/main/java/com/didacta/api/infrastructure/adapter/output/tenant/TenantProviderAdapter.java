@@ -23,4 +23,9 @@ public class TenantProviderAdapter implements TenantProviderPort {
         }
         return UUID.fromString(tenantId);
     }
+
+    @Override
+    public void setTenantId(String tenantId) {
+        TenantContext.setTenantId(tenantId);
+    }
 }
