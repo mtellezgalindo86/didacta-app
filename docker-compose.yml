@@ -44,6 +44,15 @@ services:
     networks:
       - didacta-net
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: didacta-mailpit
+    ports:
+      - "8025:8025"   # WebUI - ver emails en http://localhost:8025
+      - "1025:1025"   # SMTP - Keycloak y app envían aquí
+    networks:
+      - didacta-net
+
   didacta-api:
     build:
       context: ./didacta-api

@@ -87,6 +87,8 @@ public class OnboardingResult {
         private String firstName;
         private String lastName;
         private String status;
+        private UUID groupId;
+        private String groupName;
     }
 
     @Data

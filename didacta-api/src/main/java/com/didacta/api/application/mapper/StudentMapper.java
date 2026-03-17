@@ -13,6 +13,18 @@ public class StudentMapper {
                 .firstName(student.getFirstName())
                 .lastName(student.getLastName())
                 .status(student.getStatus())
+                .groupId(student.getGroupId())
+                .build();
+    }
+
+    public static OnboardingResult.StudentDto toDto(Student student, String groupName) {
+        return OnboardingResult.StudentDto.builder()
+                .id(student.getId())
+                .firstName(student.getFirstName())
+                .lastName(student.getLastName())
+                .status(student.getStatus())
+                .groupId(student.getGroupId())
+                .groupName(groupName)
                 .build();
     }
 }
