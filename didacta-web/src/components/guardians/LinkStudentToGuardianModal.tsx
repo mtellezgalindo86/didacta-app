@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import didactaApi from '../../api/didactaApi';
 import { linkStudentToGuardian } from '../../api/guardianApi';
 import type { Relationship } from '../../types/guardian';
 import { RELATIONSHIP_LABELS } from '../../types/guardian';
 import InlineError from '../InlineError';
+import StudentCreateModal from '../students/StudentCreateModal';
 
 interface StudentOption {
   id: string;
@@ -40,15 +41,26 @@ export default function LinkStudentToGuardianModal({
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (!isOpen) return;
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [previousStudentIds, setPreviousStudentIds] = useState<Set<string>>(new Set());
+
+  const fetchStudents = useCallback(() => {
     setLoadingStudents(true);
     didactaApi
       .get<StudentOption[]>('/api/onboarding/students')
-      .then((res) => setStudents(res.data.filter((s) => !existingStudentIds.includes(s.id))))
+      .then((res) => {
+        const filtered = res.data.filter((s) => !existingStudentIds.includes(s.id));
+        setPreviousStudentIds(new Set(filtered.map((s) => s.id)));
+        setStudents(filtered);
+      })
       .catch(console.error)
       .finally(() => setLoadingStudents(false));
-  }, [isOpen, existingStudentIds]);
+  }, [existingStudentIds]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    fetchStudents();
+  }, [isOpen, fetchStudents]);
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -80,9 +92,33 @@ export default function LinkStudentToGuardianModal({
     }
   };
 
+  const handleStudentCreated = () => {
+    setShowCreateModal(false);
+    setLoadingStudents(true);
+    didactaApi
+      .get<StudentOption[]>('/api/onboarding/students')
+      .then((res) => {
+        const filtered = res.data.filter((s) => !existingStudentIds.includes(s.id));
+        // Auto-select the newly created student
+        const newStudent = filtered.find((s) => !previousStudentIds.has(s.id));
+        if (newStudent) {
+          setSelectedStudentId(newStudent.id);
+          setValidationErrors((prev) => {
+            const { studentId: _, ...rest } = prev;
+            return rest;
+          });
+        }
+        setPreviousStudentIds(new Set(filtered.map((s) => s.id)));
+        setStudents(filtered);
+      })
+      .catch(console.error)
+      .finally(() => setLoadingStudents(false));
+  };
+
   if (!isOpen) return null;
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg my-8 max-h-[90vh] flex flex-col">
         {/* Header */}
@@ -133,6 +169,18 @@ export default function LinkStudentToGuardianModal({
             {validationErrors.studentId && (
               <p className="text-xs text-red-500 mt-1">{validationErrors.studentId}</p>
             )}
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(true)}
+              className="text-sm text-blue-600 hover:text-blue-700 hover:underline mt-1 inline-flex items-center gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+              No encuentras al alumno? Crealo aqui
+            </button>
           </div>
 
           {/* Relationship section */}
@@ -203,6 +251,12 @@ export default function LinkStudentToGuardianModal({
         </div>
       </div>
     </div>
+    <StudentCreateModal
+      isOpen={showCreateModal}
+      onClose={() => setShowCreateModal(false)}
+      onSuccess={handleStudentCreated}
+    />
+    </>
   );
 }
 

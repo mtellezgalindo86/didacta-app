@@ -1,15 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { listStudents } from '../../api/studentApi';
+import type { StudentListItem } from '../../types/student';
+import { STUDENT_STATUS_COLORS, STUDENT_STATUS_LABELS } from '../../types/student';
+import type { StudentStatus } from '../../types/student';
+import StudentCreateModal from '../../components/students/StudentCreateModal';
 import didactaApi from '../../api/didactaApi';
-
-interface StudentItem {
-  id: string;
-  firstName: string;
-  lastName: string;
-  status: string;
-  groupId: string | null;
-  groupName: string | null;
-}
 
 interface GroupOption {
   id: string;
@@ -17,72 +13,157 @@ interface GroupOption {
   gradeLevel: string;
 }
 
+type StatusFilter = 'ACTIVE' | 'INACTIVE' | '';
+
 export default function StudentListView() {
   const navigate = useNavigate();
 
-  const [students, setStudents] = useState<StudentItem[]>([]);
+  const [students, setStudents] = useState<StudentListItem[]>([]);
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [groupFilter, setGroupFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ACTIVE');
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(value);
+    }, 300);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  // Load groups only once on mount
+  useEffect(() => {
+    didactaApi.get<GroupOption[]>('/api/onboarding/groups')
+      .then(res => setGroups(res.data))
+      .catch(console.error);
+  }, []);
 
   const loadData = useCallback(() => {
     setLoading(true);
     setError(null);
-    Promise.all([
-      didactaApi.get<StudentItem[]>('/api/onboarding/students'),
-      didactaApi.get<GroupOption[]>('/api/onboarding/groups'),
-    ])
-      .then(([studentsRes, groupsRes]) => {
-        setStudents(studentsRes.data);
-        setGroups(groupsRes.data);
-      })
+
+    const studentParams: { status?: string; search?: string; groupId?: string } = {};
+    if (statusFilter) studentParams.status = statusFilter;
+    if (debouncedSearch) studentParams.search = debouncedSearch;
+    if (groupFilter) studentParams.groupId = groupFilter;
+
+    listStudents(studentParams)
+      .then(data => setStudents(data))
       .catch(() => setError('No se pudo cargar los alumnos. Intenta de nuevo.'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [statusFilter, debouncedSearch, groupFilter]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const filtered = useMemo(() => {
-    let result = students;
-    if (search) {
-      const term = search.toLowerCase();
-      result = result.filter(
-        (s) =>
-          s.firstName.toLowerCase().includes(term) ||
-          s.lastName.toLowerCase().includes(term) ||
-          `${s.firstName} ${s.lastName}`.toLowerCase().includes(term)
-      );
-    }
-    if (groupFilter) {
-      result = result.filter((s) => s.groupId === groupFilter);
-    }
-    return result;
-  }, [students, search, groupFilter]);
-
-  const hasFilters = search || groupFilter;
+  const hasFilters = debouncedSearch || groupFilter || statusFilter !== 'ACTIVE';
 
   const getInitials = (first: string, last: string) =>
     `${first.charAt(0)}${last.charAt(0)}`.toUpperCase();
+
+  const getStatusBadge = (status: string) => {
+    const colors = STUDENT_STATUS_COLORS[status as StudentStatus] || 'bg-gray-100 text-gray-500';
+    const label = STUDENT_STATUS_LABELS[status as StudentStatus] || status;
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors}`}>
+        {label}
+      </span>
+    );
+  };
+
+  const getGuardianLabel = (count: number) => {
+    if (count === 0) return <span className="text-gray-400 text-xs">Sin tutores</span>;
+    return (
+      <span className="text-gray-600 text-sm">
+        {count} {count === 1 ? 'tutor' : 'tutores'}
+      </span>
+    );
+  };
+
+  const handleCreateSuccess = () => {
+    setShowCreateModal(false);
+    loadData();
+  };
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50">
       <div className="max-w-6xl mx-auto p-6 sm:p-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Alumnos</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Gestiona los alumnos de tu institucion
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Alumnos</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Gestiona los alumnos de tu institucion
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2 self-start sm:self-auto"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Agregar alumno
+          </button>
         </div>
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">
+            {/* Status filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+            >
+              <option value="ACTIVE">Activos</option>
+              <option value="INACTIVE">Inactivos</option>
+              <option value="">Todos</option>
+            </select>
+
+            {/* Group filter */}
+            {groups.length > 0 && (
+              <select
+                value={groupFilter}
+                onChange={(e) => setGroupFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option value="">Todos los grupos</option>
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
             {/* Search */}
             <div className="relative flex-1">
               <svg
@@ -102,37 +183,22 @@ export default function StudentListView() {
                 type="text"
                 placeholder="Buscar por nombre..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
-
-            {/* Group filter */}
-            {groups.length > 0 && (
-              <select
-                value={groupFilter}
-                onChange={(e) => setGroupFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-              >
-                <option value="">Todos los grupos</option>
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            )}
           </div>
         </div>
 
         {/* Counter */}
-        <div className="mb-4">
-          <span className="text-sm text-gray-500">
-            {hasFilters
-              ? `${filtered.length} resultados`
-              : `${students.length} alumnos`}
-          </span>
-        </div>
+        {!loading && !error && (
+          <div className="mb-4">
+            <span className="text-sm text-gray-500">
+              {students.length} {students.length === 1 ? 'alumno' : 'alumnos'}
+              {hasFilters ? ' encontrados' : ''}
+            </span>
+          </div>
+        )}
 
         {/* Error state */}
         {error && (
@@ -157,6 +223,7 @@ export default function StudentListView() {
                   <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
                   <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
                   <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
                 </div>
               </div>
               {[1, 2, 3, 4, 5].map((i) => (
@@ -173,6 +240,7 @@ export default function StudentListView() {
                   </div>
                   <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
                   <div className="h-5 w-16 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
                 </div>
               ))}
             </div>
@@ -197,7 +265,7 @@ export default function StudentListView() {
         )}
 
         {/* Empty state */}
-        {!loading && !error && filtered.length === 0 && (
+        {!loading && !error && students.length === 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
             <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
               <svg
@@ -232,16 +300,22 @@ export default function StudentListView() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Aun no hay alumnos
                 </h3>
-                <p className="text-gray-500 text-sm">
-                  Los alumnos se agregan durante el proceso de onboarding.
+                <p className="text-gray-500 text-sm mb-4">
+                  Agrega tu primer alumno para comenzar.
                 </p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
+                >
+                  Agregar primer alumno
+                </button>
               </>
             )}
           </div>
         )}
 
         {/* Data */}
-        {!loading && !error && filtered.length > 0 && (
+        {!loading && !error && students.length > 0 && (
           <>
             {/* Desktop table */}
             <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -250,11 +324,12 @@ export default function StudentListView() {
                   <tr>
                     <th className="px-6 py-3">NOMBRE</th>
                     <th className="px-6 py-3">GRUPO</th>
+                    <th className="px-6 py-3">ESTADO</th>
                     <th className="px-6 py-3">TUTORES</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filtered.map((student) => (
+                  {students.map((student) => (
                     <tr
                       key={student.id}
                       onClick={() => navigate(`/alumnos/${student.id}`)}
@@ -270,7 +345,7 @@ export default function StudentListView() {
                               {student.firstName} {student.lastName}
                             </div>
                             {student.groupName && (
-                              <div className="text-xs text-gray-500 truncate">
+                              <div className="text-xs text-gray-500 truncate md:hidden">
                                 {student.groupName}
                               </div>
                             )}
@@ -281,9 +356,10 @@ export default function StudentListView() {
                         {student.groupName || '-'}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                          --
-                        </span>
+                        {getStatusBadge(student.status)}
+                      </td>
+                      <td className="px-6 py-4">
+                        {getGuardianLabel(student.guardianCount)}
                       </td>
                     </tr>
                   ))}
@@ -293,7 +369,7 @@ export default function StudentListView() {
 
             {/* Mobile cards */}
             <div className="md:hidden space-y-3">
-              {filtered.map((student) => (
+              {students.map((student) => (
                 <div
                   key={student.id}
                   onClick={() => navigate(`/alumnos/${student.id}`)}
@@ -308,15 +384,18 @@ export default function StudentListView() {
                         <span className="font-medium text-gray-900 truncate">
                           {student.firstName} {student.lastName}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 flex-shrink-0">
-                          --
-                        </span>
+                        {getStatusBadge(student.status)}
                       </div>
                       {student.groupName && (
                         <p className="text-xs text-gray-500 mt-0.5">
                           {student.groupName}
                         </p>
                       )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        {student.guardianCount === 0
+                          ? 'Sin tutores'
+                          : `${student.guardianCount} ${student.guardianCount === 1 ? 'tutor' : 'tutores'}`}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -325,6 +404,13 @@ export default function StudentListView() {
           </>
         )}
       </div>
+
+      {/* Create modal */}
+      <StudentCreateModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateSuccess}
+      />
     </div>
   );
 }

@@ -11,5 +11,8 @@ public interface StudentRepositoryPort {
     List<Student> findByInstitutionId(UUID institutionId);
     Optional<Student> findById(UUID id);
     boolean existsByIdAndInstitutionId(UUID id, UUID institutionId);
+    List<Student> findByInstitutionIdAndFilters(UUID institutionId, String status, String search, UUID groupId);
+    long countByInstitutionId(UUID institutionId);
+    void deleteById(UUID id);
     Student save(Student student);
 }

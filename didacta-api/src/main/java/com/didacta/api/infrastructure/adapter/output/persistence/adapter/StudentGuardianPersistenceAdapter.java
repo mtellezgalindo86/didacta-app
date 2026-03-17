@@ -6,7 +6,9 @@ import com.didacta.api.infrastructure.adapter.output.persistence.repository.JpaS
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,6 +41,24 @@ public class StudentGuardianPersistenceAdapter implements StudentGuardianReposit
     @Override
     public boolean existsByStudentIdAndGuardianId(UUID studentId, UUID guardianId) {
         return jpaRepo.existsByStudentIdAndGuardianId(studentId, guardianId);
+    }
+
+    @Override
+    public long countByStudentId(UUID studentId) {
+        return jpaRepo.countByStudentId(studentId);
+    }
+
+    @Override
+    public Map<UUID, Long> countByStudentIds(List<UUID> studentIds) {
+        if (studentIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        List<Object[]> results = jpaRepo.countGroupedByStudentIds(studentIds);
+        Map<UUID, Long> map = new HashMap<>();
+        for (Object[] row : results) {
+            map.put((UUID) row[0], (Long) row[1]);
+        }
+        return map;
     }
 
     @Override

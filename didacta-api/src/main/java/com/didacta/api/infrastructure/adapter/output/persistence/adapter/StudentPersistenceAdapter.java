@@ -37,6 +37,21 @@ public class StudentPersistenceAdapter implements StudentRepositoryPort {
     }
 
     @Override
+    public List<Student> findByInstitutionIdAndFilters(UUID institutionId, String status, String search, UUID groupId) {
+        return jpaRepo.findByFilters(institutionId, status, search, groupId);
+    }
+
+    @Override
+    public long countByInstitutionId(UUID institutionId) {
+        return jpaRepo.countByInstitutionId(institutionId);
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        jpaRepo.deleteById(id);
+    }
+
+    @Override
     public Student save(Student student) {
         return jpaRepo.save(student);
     }
