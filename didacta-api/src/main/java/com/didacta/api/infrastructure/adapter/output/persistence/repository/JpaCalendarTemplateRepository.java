@@ -18,4 +18,7 @@ public interface JpaCalendarTemplateRepository extends JpaRepository<CalendarTem
 
     @Query("SELECT ct FROM CalendarTemplate ct WHERE ct.active = true AND ct.applicableLevels LIKE %:level% AND ct.requiresAccreditation = :requiresAccreditation")
     List<CalendarTemplate> findByApplicableLevelAndAccreditation(@Param("level") String level, @Param("requiresAccreditation") boolean requiresAccreditation);
+
+    @Query("SELECT ct FROM CalendarTemplate ct WHERE ct.active = true AND ct.applicableLevels LIKE %:level% AND ct.requiresAccreditation = true AND ct.accreditationAuthority = :authority")
+    List<CalendarTemplate> findByApplicableLevelAndAuthority(@Param("level") String level, @Param("authority") String authority);
 }

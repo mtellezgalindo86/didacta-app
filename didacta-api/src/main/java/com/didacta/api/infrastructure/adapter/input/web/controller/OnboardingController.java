@@ -24,6 +24,7 @@ public class OnboardingController {
     private final ManageAttendanceUseCase manageAttendance;
     private final ManageCollaboratorsUseCase manageCollaborators;
     private final GetInstitutionInfoUseCase getInstitutionInfo;
+    private final SetupInstitutionUseCase setupInstitution;
 
     @GetMapping("/me")
     public ResponseEntity<OnboardingResult.MeResponse> getMe(@AuthenticationPrincipal Jwt jwt) {
@@ -94,5 +95,12 @@ public class OnboardingController {
     @GetMapping("/onboarding/sections")
     public List<OnboardingResult.AcademicSectionDto> getSections() {
         return getInstitutionInfo.getSections();
+    }
+
+    @PostMapping("/onboarding/setup")
+    public ResponseEntity<Void> setupInstitution(
+            @Valid @RequestBody OnboardingCommand.CreateInstitution command) {
+        setupInstitution.setupSectionsAndCalendars(command);
+        return ResponseEntity.ok().build();
     }
 }

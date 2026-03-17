@@ -116,6 +116,8 @@ export default function Step1Institution() {
             if (response.data && response.data.institutionId) {
                 localStorage.setItem('didacta_institution_id', response.data.institutionId);
             }
+            // Second call: create sections & calendars (requires X-Institution-Id header)
+            await api.post('/api/onboarding/setup', payload);
             navigate('/onboarding/step-2');
         } catch (err) {
             console.error(err);
