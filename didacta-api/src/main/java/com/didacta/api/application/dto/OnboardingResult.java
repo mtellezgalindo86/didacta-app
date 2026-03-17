@@ -14,6 +14,20 @@ public class OnboardingResult {
         private UserDto user;
         private TenantDto tenant;
         private OnboardingStatus onboarding;
+        private SetupProgress setupProgress;
+    }
+
+    @Data
+    @Builder
+    public static class SetupProgress {
+        private boolean hasGroup;
+        private boolean hasStudents;
+        private boolean hasAttendance;
+        private boolean hasCollaborators;
+        private int groupCount;
+        private int studentCount;
+        private int collaboratorCount;
+        private String suggestedNextAction;
     }
 
     @Data
@@ -111,6 +125,16 @@ public class OnboardingResult {
         private String name;
         private String gradeLevel;
         private String shift;
+        private UUID sectionId;
+    }
+
+    @Data
+    @Builder
+    public static class AcademicSectionDto {
+        private UUID id;
+        private String level;
+        private String accreditationType;
+        private String accreditationKey;
     }
 
     @Data

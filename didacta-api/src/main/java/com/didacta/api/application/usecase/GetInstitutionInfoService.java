@@ -4,11 +4,7 @@ import com.didacta.api.application.dto.OnboardingCommand;
 import com.didacta.api.application.dto.OnboardingResult;
 import com.didacta.api.application.mapper.OnboardingMapper;
 import com.didacta.api.application.port.input.GetInstitutionInfoUseCase;
-import com.didacta.api.application.port.output.CampusRepositoryPort;
-import com.didacta.api.application.port.output.GroupRepositoryPort;
-import com.didacta.api.application.port.output.MembershipRepositoryPort;
-import com.didacta.api.application.port.output.TenantProviderPort;
-import com.didacta.api.application.port.output.UserRepositoryPort;
+import com.didacta.api.application.port.output.*;
 import com.didacta.api.domain.exception.EntityNotFoundException;
 import com.didacta.api.domain.model.*;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +23,7 @@ public class GetInstitutionInfoService implements GetInstitutionInfoUseCase {
     private final MembershipRepositoryPort membershipRepository;
     private final CampusRepositoryPort campusRepository;
     private final GroupRepositoryPort groupRepository;
+    private final AcademicSectionRepositoryPort sectionRepository;
     private final TenantProviderPort tenantProvider;
 
     @Override
@@ -56,7 +53,25 @@ public class GetInstitutionInfoService implements GetInstitutionInfoUseCase {
         boolean hasMultipleCampuses = campus.isPresent() && !"Sede Principal".equals(campus.get().getName());
         String campusName = hasMultipleCampuses ? campus.get().getName() : null;
 
-        return OnboardingMapper.toInstitutionDetails(institution, membership.get(), campusName, hasMultipleCampuses);
+        OnboardingCommand.CreateInstitution details = OnboardingMapper.toInstitutionDetails(
+                institution, membership.get(), campusName, hasMultipleCampuses);
+
+        // Add sections data
+        List<AcademicSection> sections = sectionRepository.findByInstitutionId(institution.getId());
+        if (!sections.isEmpty()) {
+            List<OnboardingCommand.SectionEntry> sectionEntries = sections.stream()
+                    .map(s -> {
+                        OnboardingCommand.SectionEntry entry = new OnboardingCommand.SectionEntry();
+                        entry.setLevel(s.getLevel());
+                        entry.setAccreditationType(s.getAccreditationType());
+                        entry.setAccreditationKey(s.getAccreditationKey());
+                        return entry;
+                    })
+                    .toList();
+            details.setSections(sectionEntries);
+        }
+
+        return details;
     }
 
     @Override
@@ -85,6 +100,23 @@ public class GetInstitutionInfoService implements GetInstitutionInfoUseCase {
                         .name(g.getName())
                         .gradeLevel(g.getGradeLevel())
                         .shift(g.getShift())
+                        .sectionId(g.getSection() != null ? g.getSection().getId() : null)
+                        .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OnboardingResult.AcademicSectionDto> getSections() {
+        String tenantId = tenantProvider.getTenantId();
+        if (tenantId == null) return List.of();
+        UUID institutionId = UUID.fromString(tenantId);
+        return sectionRepository.findByInstitutionId(institutionId).stream()
+                .map(s -> OnboardingResult.AcademicSectionDto.builder()
+                        .id(s.getId())
+                        .level(s.getLevel())
+                        .accreditationType(s.getAccreditationType())
+                        .accreditationKey(s.getAccreditationKey())
                         .build())
                 .toList();
     }

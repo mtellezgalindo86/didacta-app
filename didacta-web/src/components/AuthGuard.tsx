@@ -15,17 +15,17 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<any>(null);
-    const [statusMessage, setStatusMessage] = useState("Verificando sesión...");
+    const [error, setError] = useState<string | null>(null);
+    const [statusMessage, setStatusMessage] = useState("Verificando sesion...");
 
     // State for user data
-    const [userData, setUserData] = useState<any>(null);
+    const [userData, setUserData] = useState<Record<string, unknown> | null>(null);
 
     // EFFECT 1: INITIAL LOAD (Runs once)
     useEffect(() => {
         const initAuth = async () => {
             if (!keycloak.authenticated) {
-                setStatusMessage("Redirigiendo a inicio de sesión...");
+                setStatusMessage("Redirigiendo a inicio de sesion...");
                 keycloak.login();
                 return;
             }
@@ -38,7 +38,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                     "Creando tu cuenta institucional segura...",
                     "Estamos configurando tu perfil docente...",
                     "Preparando tu entorno de trabajo...",
-                    "¡Todo listo! Ingresando a Didacta..."
+                    "Todo listo! Ingresando a Didacta..."
                 ];
                 for (const msg of messages) {
                     setStatusMessage(msg);
@@ -65,7 +65,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                         attempts++;
                         console.warn(`Auth Check attempt ${attempts} failed`);
                         if (attempts >= maxAttempts) {
-                            setError(retryErr);
+                            setError('No pudimos verificar tu estado. Intenta recargar.');
                             break;
                         }
                         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -92,30 +92,30 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                 }
                 const freshData = res.data;
                 const freshStep = freshData.onboarding.nextStep;
+                const hasInstitution = !!freshData.tenant?.institutionId;
 
                 if (freshStep === 'DONE') {
-                    if (currentPath.startsWith('/onboarding')) {
+                    // Allow step-2 (invite) even when DONE, as long as user has institution
+                    if (currentPath === '/onboarding/step-2' && hasInstitution) {
+                        return;
+                    }
+                    // Redirect away from step-0 and step-1 if already DONE
+                    if (currentPath === '/onboarding/step-0' || currentPath === '/onboarding/step-1') {
                         navigate('/dashboard');
                     }
+                } else if (freshStep === 'STEP_1') {
+                    // User hasn't created institution yet
+                    if (!currentPath.startsWith('/onboarding')) {
+                        navigate('/onboarding/step-0');
+                    }
+                    // Allow step-0 and step-1, block step-2 (no institution yet)
+                    if (currentPath === '/onboarding/step-2') {
+                        navigate('/onboarding/step-1');
+                    }
                 } else {
-                    const stepOrder: Record<string, number> = {
-                        'STEP_0': 0,
-                        'STEP_1': 1,
-                        'STEP_2': 2,
-                        'STEP_3': 3,
-                        'STEP_4': 4,
-                        'STEP_5': 5,
-                    };
-                    const maxStep = stepOrder[freshStep] ?? 0;
-                    const currentStep = pathToStep(currentPath);
-
-                    if (currentStep >= 0) {
-                        // Allow step-0 (welcome) always; guard only steps beyond maxStep
-                        if (currentStep > 0 && currentStep > maxStep) {
-                            navigate(stepToPath(freshStep));
-                        }
-                    } else {
-                        navigate(stepToPath(freshStep));
+                    // For any other step, if user is not in onboarding, redirect to step-0
+                    if (!currentPath.startsWith('/onboarding') && !currentPath.startsWith('/dashboard')) {
+                        navigate('/onboarding/step-0');
                     }
                 }
             } catch (e) {
@@ -127,28 +127,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
     }, [location, userData, loading, navigate]);
 
-    function stepToPath(step: string) {
-        switch (step) {
-            case 'STEP_0': return '/onboarding/step-0';
-            case 'STEP_1': return '/onboarding/step-1';
-            case 'STEP_2': return '/onboarding/step-2';
-            case 'STEP_3': return '/onboarding/step-3';
-            case 'STEP_4': return '/onboarding/step-4';
-            case 'STEP_5': return '/onboarding/step-5';
-            default: return '/dashboard';
-        }
-    }
-
-    function pathToStep(path: string): number {
-        if (path.includes('step-0')) return 0;
-        if (path.includes('step-1')) return 1;
-        if (path.includes('step-2')) return 2;
-        if (path.includes('step-3')) return 3;
-        if (path.includes('step-4')) return 4;
-        if (path.includes('step-5')) return 5;
-        return -1;
-    }
-
     if (loading) {
         return <LoadingView message={statusMessage} />;
     }
@@ -157,7 +135,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
                 <div className="text-center">
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Error de conexión</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Error de conexion</h2>
                     <p className="text-gray-600 mb-4">No pudimos verificar tu estado. Intenta recargar.</p>
                     <button
                         onClick={() => {
@@ -168,9 +146,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                     >
                         Reintentar
                     </button>
-                    <pre className="mt-4 text-xs text-left bg-gray-100 p-2 rounded text-red-500 overflow-auto max-w-lg">
-                        {JSON.stringify(error, null, 2)}
-                    </pre>
                 </div>
             </div>
         );

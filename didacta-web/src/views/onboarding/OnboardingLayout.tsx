@@ -11,7 +11,7 @@ interface OnboardingLayoutProps {
 }
 
 export default function OnboardingLayout({ step, title, subtitle, children, maxWidth = "max-w-2xl" }: OnboardingLayoutProps) {
-    const totalSteps = 5;
+    const totalSteps = 2;
 
     return (
         <div className="min-h-screen bg-white">

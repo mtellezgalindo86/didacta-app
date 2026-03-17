@@ -3,9 +3,8 @@ import UserProfileMenu from '../../components/UserProfileMenu';
 
 const steps = [
     { num: 1, label: 'Registrar tu escuela' },
-    { num: 2, label: 'Crear tu primer grupo' },
-    { num: 3, label: 'Agregar a tus alumnos' },
-    { num: 4, label: 'Pasar tu primera asistencia' },
+    { num: 2, label: 'Invitar a tu equipo (opcional)' },
+    { num: 3, label: 'Explorar tu dashboard' },
 ];
 
 export default function Step0Welcome() {
@@ -32,7 +31,7 @@ export default function Step0Welcome() {
                     </p>
 
                     <div className="text-left max-w-sm mx-auto mb-10">
-                        <p className="text-sm font-medium text-gray-700 mb-4">Qué vamos a hacer:</p>
+                        <p className="text-sm font-medium text-gray-700 mb-4">Que vamos a hacer:</p>
                         <div className="space-y-3">
                             {steps.map((s) => (
                                 <div key={s.num} className="flex items-center gap-3 text-gray-600">

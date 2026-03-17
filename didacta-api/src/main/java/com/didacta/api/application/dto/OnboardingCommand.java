@@ -25,6 +25,17 @@ public class OnboardingCommand {
         private String role;
         private boolean hasMultipleCampuses;
         private String campusName;
+        private List<SectionEntry> sections;
+    }
+
+    @Data
+    public static class SectionEntry {
+        @NotBlank
+        private String level;
+        @NotBlank
+        @Pattern(regexp = "NONE|SEP_RVOE|UNAM_DGIRE|IPN|OTHER", message = "must be a valid accreditation type")
+        private String accreditationType;
+        private String accreditationKey;
     }
 
     @Data
@@ -34,6 +45,7 @@ public class OnboardingCommand {
         private String gradeLevel;
         private String shift;
         private UUID campusId;
+        private UUID sectionId;
     }
 
     @Data
@@ -85,10 +97,9 @@ public class OnboardingCommand {
         @NotBlank
         @Email
         private String email;
-        @NotBlank
         private String fullName;
         @NotBlank
-        @Pattern(regexp = "OWNER|DIRECTOR|COORDINATOR|TEACHER", message = "must be one of: OWNER, DIRECTOR, COORDINATOR, TEACHER")
+        @Pattern(regexp = "OWNER|DIRECTOR|COORDINATOR|TEACHER|ADMIN", message = "must be one of: OWNER, DIRECTOR, COORDINATOR, TEACHER, ADMIN")
         private String role;
         private UUID groupId;
     }
