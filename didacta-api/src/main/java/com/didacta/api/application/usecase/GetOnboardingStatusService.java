@@ -44,6 +44,10 @@ public class GetOnboardingStatusService implements GetOnboardingStatusUseCase {
         boolean hasAttendance = false;
         boolean hasCollaborators = false;
 
+        int groupCount = 0;
+        int studentCount = 0;
+        int collaboratorCount = 0;
+
         if (activeMembership.isPresent()) {
             hasInstitution = true;
             Institution institution = activeMembership.get().getInstitution();
@@ -52,19 +56,23 @@ public class GetOnboardingStatusService implements GetOnboardingStatusUseCase {
 
             List<GroupEntity> groups = groupRepository.findByInstitutionId(institutionId);
             hasGroup = !groups.isEmpty();
+            groupCount = groups.size();
 
-            if (hasGroup) {
-                List<Student> students = studentRepository.findByInstitutionId(institutionId);
-                hasStudents = !students.isEmpty();
-                if (hasStudents) {
-                    hasAttendance = attendanceRepository.existsByInstitutionId(institutionId);
-                }
+            List<Student> students = studentRepository.findByInstitutionId(institutionId);
+            hasStudents = !students.isEmpty();
+            studentCount = students.size();
+
+            if (hasStudents) {
+                hasAttendance = attendanceRepository.existsByInstitutionId(institutionId);
             }
 
-            hasCollaborators = !collaboratorRepository.findByInstitutionId(institutionId).isEmpty();
+            List<CollaboratorPreUser> collaborators = collaboratorRepository.findByInstitutionId(institutionId);
+            hasCollaborators = !collaborators.isEmpty();
+            collaboratorCount = collaborators.size();
         }
 
-        String nextStep = resolveNextStep(hasInstitution, hasGroup, hasStudents, hasAttendance);
+        String nextStep = resolveNextStep(hasInstitution);
+        String suggestedNextAction = resolveSuggestedAction(hasGroup, hasStudents, hasAttendance, hasCollaborators);
 
         return OnboardingResult.MeResponse.builder()
                 .user(OnboardingMapper.toUserDto(user))
@@ -77,14 +85,29 @@ public class GetOnboardingStatusService implements GetOnboardingStatusUseCase {
                         .hasCollaborators(hasCollaborators)
                         .nextStep(nextStep)
                         .build())
+                .setupProgress(OnboardingResult.SetupProgress.builder()
+                        .hasGroup(hasGroup)
+                        .hasStudents(hasStudents)
+                        .hasAttendance(hasAttendance)
+                        .hasCollaborators(hasCollaborators)
+                        .groupCount(groupCount)
+                        .studentCount(studentCount)
+                        .collaboratorCount(collaboratorCount)
+                        .suggestedNextAction(suggestedNextAction)
+                        .build())
                 .build();
     }
 
-    private String resolveNextStep(boolean hasInstitution, boolean hasGroup, boolean hasStudents, boolean hasAttendance) {
+    private String resolveNextStep(boolean hasInstitution) {
         if (!hasInstitution) return "STEP_1";
-        if (!hasGroup) return "STEP_2";
-        if (!hasStudents) return "STEP_3";
-        if (!hasAttendance) return "STEP_4";
         return "DONE";
+    }
+
+    private String resolveSuggestedAction(boolean hasGroup, boolean hasStudents, boolean hasAttendance, boolean hasCollaborators) {
+        if (!hasGroup) return "CREATE_GROUP";
+        if (!hasStudents) return "ADD_STUDENTS";
+        if (!hasAttendance) return "TAKE_ATTENDANCE";
+        if (!hasCollaborators) return "INVITE_TEAM";
+        return "ALL_DONE";
     }
 }

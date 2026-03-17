@@ -10,4 +10,5 @@ public interface GetInstitutionInfoUseCase {
     OnboardingCommand.CreateInstitution getDetails(String keycloakUserId);
     List<OnboardingResult.CampusDto> getCampuses();
     List<OnboardingResult.GroupDto> getGroups();
+    List<OnboardingResult.AcademicSectionDto> getSections();
 }
