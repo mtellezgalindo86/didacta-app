@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -23,6 +24,11 @@ public class StudentPersistenceAdapter implements StudentRepositoryPort {
     @Override
     public List<Student> findByInstitutionId(UUID institutionId) {
         return jpaRepo.findByInstitutionId(institutionId);
+    }
+
+    @Override
+    public Optional<Student> findById(UUID id) {
+        return jpaRepo.findById(id);
     }
 
     @Override
