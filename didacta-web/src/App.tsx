@@ -10,6 +10,9 @@ import CalendarView from './views/settings/CalendarView';
 import StaffListView from './views/staff/StaffListView';
 import StaffProfileView from './views/staff/StaffProfileView';
 import StudentListView from './views/students/StudentListView';
+import StudentProfileView from './views/students/StudentProfileView';
+import GuardianListView from './views/guardians/GuardianListView';
+import GuardianProfileView from './views/guardians/GuardianProfileView';
 
 export default function App() {
   return (
@@ -39,6 +42,24 @@ export default function App() {
           <Route path="/alumnos" element={
             <DashboardLayout>
               <StudentListView />
+            </DashboardLayout>
+          } />
+
+          <Route path="/alumnos/:id" element={
+            <DashboardLayout>
+              <StudentProfileView />
+            </DashboardLayout>
+          } />
+
+          <Route path="/tutores" element={
+            <DashboardLayout>
+              <GuardianListView />
+            </DashboardLayout>
+          } />
+
+          <Route path="/tutores/:id" element={
+            <DashboardLayout>
+              <GuardianProfileView />
             </DashboardLayout>
           } />
 
