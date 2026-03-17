@@ -23,7 +23,11 @@ public interface JpaGuardianRepository extends JpaRepository<Guardian, UUID> {
 
     @Query("SELECT g FROM Guardian g WHERE g.institutionId = :instId " +
            "AND (:status IS NULL OR g.status = :status) " +
-           "AND (:search IS NULL OR LOWER(CONCAT(g.firstName, ' ', g.lastName, ' ', COALESCE(g.phone, ''), ' ', COALESCE(g.email, ''))) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "AND (CAST(:search AS STRING) IS NULL " +
+           "OR LOWER(g.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS STRING), '%')) " +
+           "OR LOWER(g.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS STRING), '%')) " +
+           "OR LOWER(g.phone) LIKE LOWER(CONCAT('%', CAST(:search AS STRING), '%')) " +
+           "OR (g.email IS NOT NULL AND LOWER(g.email) LIKE LOWER(CONCAT('%', CAST(:search AS STRING), '%'))))")
     List<Guardian> findByFilters(@Param("instId") UUID institutionId,
                                  @Param("status") String status,
                                  @Param("search") String search);

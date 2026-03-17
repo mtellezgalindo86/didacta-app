@@ -22,7 +22,10 @@ public interface JpaStaffMemberRepository extends JpaRepository<StaffMember, UUI
            "AND (:campusId IS NULL OR s.campusId = :campusId) " +
            "AND (:category IS NULL OR s.category = :category) " +
            "AND (:status IS NULL OR s.status = :status) " +
-           "AND (:search IS NULL OR LOWER(CONCAT(s.firstName, ' ', s.lastName, ' ', COALESCE(s.email, ''))) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "AND (CAST(:search AS STRING) IS NULL " +
+           "OR LOWER(s.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS STRING), '%')) " +
+           "OR LOWER(s.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS STRING), '%')) " +
+           "OR (s.email IS NOT NULL AND LOWER(s.email) LIKE LOWER(CONCAT('%', CAST(:search AS STRING), '%'))))")
     List<StaffMember> findByFilters(@Param("instId") UUID institutionId,
                                      @Param("campusId") UUID campusId,
                                      @Param("category") String category,
