@@ -7,6 +7,9 @@ import Step0Welcome from './views/onboarding/Step0Welcome';
 import Step1Institution from './views/onboarding/Step1Institution';
 import Step2InviteUser from './views/onboarding/Step2InviteUser';
 import CalendarView from './views/settings/CalendarView';
+import StaffListView from './views/staff/StaffListView';
+import StaffProfileView from './views/staff/StaffProfileView';
+import StudentListView from './views/students/StudentListView';
 
 export default function App() {
   return (
@@ -18,6 +21,24 @@ export default function App() {
           <Route path="/dashboard" element={
             <DashboardLayout>
               <DashboardView />
+            </DashboardLayout>
+          } />
+
+          <Route path="/equipo" element={
+            <DashboardLayout>
+              <StaffListView />
+            </DashboardLayout>
+          } />
+
+          <Route path="/equipo/:id" element={
+            <DashboardLayout>
+              <StaffProfileView />
+            </DashboardLayout>
+          } />
+
+          <Route path="/alumnos" element={
+            <DashboardLayout>
+              <StudentListView />
             </DashboardLayout>
           } />
 

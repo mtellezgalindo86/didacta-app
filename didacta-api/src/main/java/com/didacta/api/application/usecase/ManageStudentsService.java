@@ -17,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -63,8 +65,21 @@ public class ManageStudentsService implements ManageStudentsUseCase {
         if (tenantId == null) return List.of();
         UUID institutionId = UUID.fromString(tenantId);
 
-        return studentRepository.findByInstitutionId(institutionId).stream()
-                .map(StudentMapper::toDto)
+        List<Student> students = studentRepository.findByInstitutionId(institutionId);
+
+        // Build group name lookup to avoid N+1
+        Map<UUID, String> groupNames = students.stream()
+                .map(Student::getGroupId)
+                .distinct()
+                .collect(Collectors.toMap(
+                        gid -> gid,
+                        gid -> groupRepository.findById(gid)
+                                .map(GroupEntity::getName)
+                                .orElse("")
+                ));
+
+        return students.stream()
+                .map(s -> StudentMapper.toDto(s, groupNames.get(s.getGroupId())))
                 .toList();
     }
 }
