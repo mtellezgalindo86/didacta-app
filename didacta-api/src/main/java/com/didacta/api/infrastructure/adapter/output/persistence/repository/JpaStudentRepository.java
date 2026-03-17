@@ -17,8 +17,8 @@ public interface JpaStudentRepository extends JpaRepository<Student, UUID> {
     long countByInstitutionId(UUID institutionId);
 
     @Query("SELECT s FROM Student s WHERE s.institutionId = :instId " +
-           "AND (:status IS NULL OR s.status = :status) " +
-           "AND (:groupId IS NULL OR s.groupId = :groupId) " +
+           "AND (CAST(:status AS STRING) IS NULL OR s.status = :status) " +
+           "AND (CAST(:groupId AS STRING) IS NULL OR CAST(s.groupId AS STRING) = CAST(:groupId AS STRING)) " +
            "AND (CAST(:search AS STRING) IS NULL " +
            "OR LOWER(s.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS STRING), '%')) " +
            "OR LOWER(s.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS STRING), '%')))")
